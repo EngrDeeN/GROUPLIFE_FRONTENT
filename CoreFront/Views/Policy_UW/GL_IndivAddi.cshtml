@@ -1,0 +1,404 @@
+﻿@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Configuration.Json
+@inject IConfiguration Configuration
+
+@{
+    ViewData["Title"] = "GroupLife Individual";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/json2/20130526/json2.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css" />
+<script src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+
+    const app_host_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_IP").Value);
+    const api_port_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_PNO").Value);
+    const Result_API = (app_host_API + ":" + api_port_API);
+
+    const app_host_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_IP").Value);
+    const api_port_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_PNO").Value);
+    const Result_Front = (app_host_Front + ":" + api_port_Front);
+
+</script>
+<script type="text/javascript">
+
+
+    $(document).ready(function () {
+        $.ajax({
+            "async": false,
+            "crossDomain": true,
+            url: "http://" + Result_API + "/api/GlobalParameters/GetGlobalParamByCategory/TITLE",
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            datatype: JSON,
+            timeout: 5000,
+            success: function (result) {
+                $(result).each(function () {
+                    $("#FGBU_CUST_TITLE").append($("<option></option>").val(this.PARAM_VALUE).html(this.PARAM_NAME));
+                });
+            },
+            error: function (data) { }
+        });
+    });
+
+
+
+    function Get_Added_Customer() {
+        var FGPH_POLICY_NO = $("#FGPH_POLICY_NO").val();
+        var baseURL = "http://" + Result_API + "/api/UnderWritting/Get_NewOrDelete_Customer/" + FGPH_POLICY_NO;
+        $.ajax(baseURL,
+            {
+                "async": true,
+                "crossDomain": true,
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: OnSuccess,
+                failure: function (response) {
+                    alert(response.d);
+                },
+                error: function (response) {
+                    alert(response.d);
+                }
+            });
+        function OnSuccess(response) {
+            if (response === 0) {
+                alert('Record not found');
+            }
+
+            $.fn.dataTable.ext.errMode = 'throw';
+            $("#GL_IndivAddi").DataTable({
+                bLengthChange: true,
+                lengthMenu: [[5, 10, -1], [5, 10, "All"]],
+                bFilter: true,
+                bSort: true,
+                bPaginate: true,
+                data: response,
+                "columns": [{ "data": "FGPC_CUST_TITLE" },
+                { "data": "FGPC_CUST_NAME" },
+                { "data": "FGPC_EMP_AGE" },
+                { "data": "FGPC_CUST_GENDER" },
+                { "data": "FGPC_CUST_OCCUP" },
+                //{ "data": "FSSI_DESCRIPTION" },
+                { "data": "FGPH_POLICY_NO" },
+                { "data": "FGQH_QUOTATHDR_CODE" },
+                { "data": "FGPC_CUST_CNIC" },
+                ],
+            });
+        };
+    };
+
+    $(document).ready(function () {
+        $("#FGBU_CUST_CNIC").focusout(function () {
+            let custCNIC = $("#FGBU_CUST_CNIC").val();
+            let n1 = custCNIC.substring(0, 5);
+            let n2 = custCNIC.substring(5, 12);
+            let addn = n1 + "-" + n2 + "-" + custCNIC[custCNIC.length - 1]
+            $("#FGBU_CUST_CNIC").val(addn);
+        })
+    })
+
+    function Fill_PlanAndRider() {
+
+        $.ajax({
+            "async": true,
+            "crossDomain": true,
+            type: "GET",
+            url: "http://" + Result_API + "/api/GLIndivAddi/GetGLIndiAddiDetailsByPolicyNo/" + $("#FGPH_POLICY_NO").val(),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: OnSuccess1,
+            failure: function (response) {
+                alert(response.d);
+            },
+            error: function (response) {
+                alert(response.d);
+            }
+        });
+
+        function OnSuccess1(response) {
+            $("#datatablesRelation").DataTable(
+                {
+                    bLengthChange: true,
+                    lengthMenu: [[5, 10, -1], [5, 10, "All"]],
+                    bFilter: true,
+                    bSort: true,
+                    bPaginate: true,
+                    data: response,
+                    columns: [{ 'data': 'FSPM_PRODUCT_ID' },
+                    { 'data': 'FGPP_SUMASS_CRITRIA' }]
+                });
+        };
+    }
+
+
+    $(document).ready(function () {
+        $.ajax({
+            "async": true,
+            "crossDomain": true,
+            url: "http://" + Result_API + "/api/GlobalParameters/GetGlobalParamByCategory/CUOCP",
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            datatype: JSON,
+            timeout: 5000,
+            success: function (result) {
+                $(result).each(function () {
+                    $("#FGBU_CUST_OCCUPATION").append($("<option></option>").val(this.PARAM_VALUE).html(this.PARAM_NAME));
+                });
+            },
+            error: function (data) { }
+        });
+    });
+
+    $(document).ready(function () {
+        $.ajax({
+            "async": true,
+            "crossDomain": true,
+            url: "http://" + Result_API + "/api/GlobalParameters/GetGlobalParamByCategory/GENDR",
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            datatype: JSON,
+            timeout: 5000,
+            success: function (result) {
+                $(result).each(function () {
+                    // $("#FGBU_CUST_GENDER").append($("<option></option>").val(this.PARAM_VALUE).html(this.PARAM_NAME));
+                });
+            },
+            error: function (data) { }
+        });
+    });
+
+    $(document).ready(function () {
+        $.ajax({
+            "async": true,
+            "crossDomain": true,
+            url: " http://" + Result_API + "/api/GlobalParameters/GetGlobalParamByCategory/PFREQ",
+            type: "GET",
+            timeout: 5000,
+            contentType: "application/json; charset=utf-8",
+            datatype: JSON,
+            cache: false,
+            success: function (result) {
+                $(result).each(function () {
+                    $("#frequency").append($("<option></option>").val(this.PARAM_VALUE).html(this.PARAM_NAME));
+                });
+            },
+            error: function (data) { }
+        });
+    });
+
+    window.setTimeout(function () {
+        $(".alert").fadeTo(500, 0).slideUp(500, function () {
+            $(this).remove();
+        });
+    }, 4000);
+
+    $(document).ready(function () {
+        $('form input').keydown(function (event) {
+            if (event.keyCode == 13) {
+                event.preventDefault();
+                return false;
+            }
+        });
+
+        $('#GLIndividualAddition').click(function (e) {
+            var txtFormIssues = '';
+            var IsFormValid = false;
+
+            if ($('#FGPH_POLICY_NO').val() == '') {
+                alert('Please Provide Policy Number.\n');
+                IsFormValid = false;
+            } else if ($('#FGBU_CUST_CNIC').val() == '') {
+                alert('Please provide Customer CNIC Number.\n');
+                IsFormValid = false;
+            } else if ($('#FGBU_CUST_NAME').val() == '') {
+                alert('Please provide Custoner Name\n');
+                IsFormValid = false;
+            } else if ($('#FGBU_EMP_AGE').val() == '') {
+                alert('Please provide Customer Age.\n');
+                IsFormValid = false;
+            } else if ($('#FGBU_CUST_GENDER').val() == '') {
+                alert('Please Select Customer Gendar.\n');
+                IsFormValid = false;
+            } else if ($('#FGBU_CUST_OCCUPATION').val() == '') {
+                alert('Please Select Customer Occupation.\n');
+                IsFormValid = false;
+            } else if ($('#FGBU_POL_COVGE_SUMASSURD').val() == '') {
+                alert('Please Provide Coverd SumAssured.\n');
+                IsFormValid = false;
+            } else if ($('#FUPF_LOADING_TYP').val() == '') {
+                alert('Please Provide Loading Type.\n');
+                IsFormValid = false;
+            } else if ($('#FUPF_LOADING_AMTPERC').val() == '') {
+                alert('Please Provide loading Amount.\n');
+                IsFormValid = false;
+            } else if ($('#FGBU_POL_COVGE_STDATE').val() == '') {
+                alert('Please Provide Covered Start Date.\n');
+                IsFormValid = false;
+            } else if ($('#FGBU_POL_COVGE_EDDATE').val() == '') {
+                alert('Please Provide Covered End Date.\n');
+                IsFormValid = false;
+            } else if ($('#FGBU_CUST_CATEGORY').val() == '') {
+                alert('Please Select Customer Category.\n');
+                IsFormValid = false;
+            } else {
+                IsFormValid = true;
+                $("#saving_spinner").removeAttr("hidden", true);
+            }
+            return IsFormValid;
+        });
+    });
+</script>
+
+<form method="post" action="/Policy_UW/GroupLifeIndividualAddition" class="form-horizontal">
+
+    <div class="card">
+        <div class="card-body">
+            <h1 class="card-title mt-3 mb-4" style="font-weight:600; font-size:1.3rem; font-weight:bold">Group Life Individual Addition</h1>
+            @*<h3 class="card-title" style="font-weight:bold; font-size:1rem"> Employee Addition Details</h3>*@
+            <div class="row">
+
+                <div class="col-md-4">
+                    @if (TempData["GroupLifeIndividual"] != null)
+                    {<div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <strong>
+                                @TempData["GroupLifeIndividual"]
+                            </strong>
+                        </div>}
+                </div>
+            </div>
+
+            <div class="row mt-1">
+                <div class="col-md-3">
+                    <label for="FGPH_POLICY_NO" class="text-success" style="font-weight:bold">Policy No:</label>
+                    <input id="FGPH_POLICY_NO" name="FGPH_POLICY_NO" placeholder="Policy No" class="form-control" maxlength="13" onfocusout="Fill_PlanAndRider()" />
+                </div>
+                <div class="col-md-3 col-sm-12">
+                    <label for="FGBU_CUST_TITLE" class="text-success" style="font-weight:bold;">Title:</label>
+                    <select class="form-select" name="FGBU_CUST_TITLE" id="FGBU_CUST_TITLE">
+                        <option value="">--Select--</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="FGBU_CUST_CNIC" class="text-success" style="font-weight:bold">Customer CNIC NO:</label>
+                    <input id="FGBU_CUST_CNIC" name="FGBU_CUST_CNIC" placeholder="Customer CNIC NO" class="form-control" maxlength="15" />
+                </div>
+                <div class="col-md-3">
+                    <label for="FGBU_CUST_NAME" class="text-success" style="font-weight:bold">Customer Name:</label>
+                    <input id="FGBU_CUST_NAME" name="FGBU_CUST_NAME" placeholder="Customer Name" class="form-control" maxlength="25" />
+                </div>
+            </div>
+            <div class="row mt-1">
+                <div class="col-md-3">
+                    <label for="FGBU_EMP_AGE" class="text-success" style="font-weight:bold">Customer Age:</label>
+                    <input id="FGBU_EMP_AGE" name="FGBU_EMP_AGE" placeholder="Customer Age" class="form-control" maxlength="2" />
+                </div>
+                <div class="col-md-3">
+                    <label for="FGBU_CUST_DOB" class="text-success" style="font-weight:bold">Customer DOB:</label>
+                    <input id="FGBU_CUST_DOB" name="FGBU_CUST_DOB" class="form-control" data-val="true" data-val-required="Date is required" type="date" />
+                </div>
+                <div class="col-md-3">
+                    <label for="FGBU_CUST_GENDER" class="text-success" style="font-weight:bold">Customer Gender:</label>
+                    <select class="form-select" name="FGBU_CUST_GENDER" id="FGBU_CUST_GENDER">
+                        <option value="">--Select Gender--</option>
+                        <option value="F">Female</option>
+                        <option value="M">Male</option>
+                        <option value="O">Others</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="FGBU_CUST_OCCUPATION" class="text-success" style="font-weight:bold">Occupation:</label>
+                    <select class="form-select" name="FGBU_CUST_OCCUPATION" id="FGBU_CUST_OCCUPATION">
+                        <option value="">
+                            --- Select Occupation ---
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3 col-sm-12">
+                    <label for="planName" class="text-success" style="font-weight:bold;">Plan Name:</label>
+                    <input id="planName" name="planName" placeholder="Plan Name" class="form-control" readonly />
+                </div>
+                <div class="col-md-3 col-sm-12">
+                    <label for="FGBU_POL_COVGE_SUMASSURD" class="text-success" style="font-weight:bold;">Sum Assured:</label>
+                    <input id="FGBU_POL_COVGE_SUMASSURD" name="FGBU_POL_COVGE_SUMASSURD" placeholder="Sum Assured" class="form-control" />
+                </div>
+                <div class="col-md-3 col-sm-12">
+                    <label for="FUPF_LOADING_TYP" class="text-success" style="font-weight:bold;">Loading Type:</label>
+                    <input id="FUPF_LOADING_TYP" name="FUPF_LOADING_TYP" placeholder="Loading Type" class="form-control" />
+                </div>
+                <div class="col-md-3 col-sm-12">
+                    <label for="FUPF_LOADING_AMTPERC" class="text-success" style="font-weight:bold;">Loading Amount:</label>
+                    <input id="FUPF_LOADING_AMTPERC" name="FUPF_LOADING_AMTPERC" placeholder="Loading Amount" class="form-control" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3 col-sm-12">
+                    <label for="FGBU_POL_COVGE_STDATE" class="text-success" style="font-weight:bold;">Policy Start Date:</label>
+                    <input id="FGBU_POL_COVGE_STDATE" name="FGBU_POL_COVGE_STDATE" placeholder="Policy Start Date" class="form-control" data-val="true" data-val-required="Date is required" type="date" />
+                </div>
+                <div class="col-md-3 col-sm-12">
+                    <label for="FGBU_POL_COVGE_EDDATE" class="text-success" style="font-weight:bold;">Coverage Start Date:</label>
+                    <input id="FGBU_POL_COVGE_EDDATE" name="FGBU_POL_COVGE_EDDATE" placeholder="Coverage Start Date" class="form-control" data-val="true" data-val-required="Date is required" type="date" />
+                </div>
+                <div class="col-md-3">
+                    <label for="FGBU_CUST_CATEGORY" class="text-success" style="font-weight:bold">Category:</label>
+                    <select class="form-select" name="FGBU_CUST_CATEGORY" id="FGBU_CUST_CATEGORY">
+                        <option value="">--Select CATEGORY--</option>
+                        <option value="A">A CLASS </option>
+                        <option value="B">B CLASS </option>
+                        <option value="C">C CLASS </option>
+                        <option value="D">D CLASS </option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <button class="btn btn-success mt-2 mb-2" type="submit" name="GLIndividualAddition" id="GLIndividualAddition">Process</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-primary" type="button" id="Submit" name="Submit" onclick="Get_Added_Customer()">Load Data</button>
+                </div>
+            </div>
+
+            <div class="row">
+            </div>
+            <div class="container-fluid p-0">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <table id="GL_IndivAddi" class="table table-striped" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>Title:</th>
+                                            <th>Customer Name:</th>
+                                            <th>Age</th>
+                                            <th>Gendar</th>
+                                            <th>Occupation</th>
+                                            <th>Policy Number</th>
+                                            <th>Quotation Code</th>
+                                            <th>Customer CNIC</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

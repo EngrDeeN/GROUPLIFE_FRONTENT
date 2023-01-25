@@ -1,0 +1,169 @@
+﻿@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Configuration.Json
+@inject IConfiguration Configuration
+@{
+    ViewData["Title"] = "Under Writting Person";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css" />
+<script src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+
+<script>
+    const app_host_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_IP").Value);
+    const api_port_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_PNO").Value);
+    const Result_API = (app_host_API + ":" + api_port_API);
+
+    const app_host_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_IP").Value);
+    const api_port_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_PNO").Value);
+    const Result_Front = (app_host_Front + ":" + api_port_Front);
+
+</script>
+<script type="text/javascript">
+
+
+    $(document).ready(function () {
+        $('#Reset').click(function (e) {
+            e.preventDefault();
+            var go_to_url = "http://" + Result_Front + "/UnderWritingPersons";
+            document.location.href = go_to_url;
+        });
+    });
+
+    $(document).ready(function () {
+
+        $('#btnPolicySearch').click(function (e) {
+            e.preventDefault();
+            var Policy_no = $("#P_FGPH_POLICY_NO").val();
+            var baseURL = "http://" + Result_API + "/api/UnderWritting/GetPendingPersons/" + Policy_no;
+            $(".spinner-box").removeAttr("hidden", true);
+            setTimeout(function () {
+                $.ajax(baseURL,
+                    {
+                        "async": true,
+                        "crossDomain": true,
+                        type: "GET",
+                        cache: false,
+                        contentType: "application/json; charset=utf-8",
+                        datatype: JSON,
+                        timeout: 5000,
+                        success: function (data, status, xhr) {
+                            $(data).each(function () {
+                                if (data) {
+
+                                    $("#P_FGPH_POLICY_NO").val(this.FGPH_POLICY_NO);
+                                    $("#FGQH_QUOTATHDR_CODE").val(this.FGQH_QUOTATHDR_CODE);
+
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        type: "GET",
+                                        url: "http://" + Result_API + "/api/UnderWritting/GetPendingPersons/" + Policy_no,
+                                        contentType: "application/json; charset=utf-8",
+                                        dataType: "json",
+                                        success: OnSuccess,
+                                        failure: function (response) {
+                                            alert(response.d);
+                                        },
+                                        error: function (response) {
+                                            alert(response.d);
+                                        }
+                                    });
+                                    function OnSuccess(response) {
+                                        if (response === 0) {
+                                            alert('Record not found');
+                                        }
+
+                                        $.fn.dataTable.ext.errMode = 'throw';
+                                        $("#PendingPersonstablesGrid").DataTable({
+                                            bLengthChange: true,
+                                            lengthMenu: [[5, 10, -1], [5, 10, "All"]],
+                                            bFilter: true,
+                                            bSort: true,
+                                            bPaginate: true,
+                                            data: response,
+                                            "columns": [{ "data": "POLICY_NO" },
+                                            { "data": "QUOTATION_CODE" },
+                                            { "data": "FGBU_EMP_NAME" },
+                                            {
+                                                "data": "FGBU_CUST_CNIC",
+                                                "render": function (data, type, row, meta) {
+                                                    return '<a href="/IndivUnderWritting/?CNIC=' + row.FGBU_CUST_CNIC + '">' + data + '</a>';
+                                                }
+                                            },
+                                            { "data": "FGBU_EMP_AGE" },
+                                            { "data": "FSSI_REGISTRATION_NO" }],
+
+                                        });
+                                    };
+                                } else {
+
+                                    alert('No Data Found for given criteria.');
+                                }
+                            });
+                        },
+                        error: function (jqXhr, textStatus, errorMessage) { // error callback
+                            alert('Invalid Policy Search. Do You Want to Search a New Policy ?' + errorMessage);
+                            var go_to_url = "http://" + Result_Front + "/UnderWritingPersons";
+                            document.location.href = go_to_url;
+                        }
+                    });
+                $(".spinner-box").attr("hidden", true)
+            }, 2000)
+        });
+    });
+
+</script>
+<form method="post" action="/Policy_UW/AddUpdateUnderWritting" class="form-horizontal">
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row mt-3">
+                <h1 class="card-title" style="font-weight: 500; font-size: 1.3rem; font-weight: bold">Group Life Individual UnderWriting</h1>
+            </div>
+            <div class="input-group m-2">
+                <button class="btn btn-secondary" type="button" name="btnPolicySearch" id="btnPolicySearch" onclick="btnPolicySearch" value="Search ">Go!</button>
+                <input type="text" name="P_FGPH_POLICY_NO" id="P_FGPH_POLICY_NO" style="width:50%" placeholder="GL100000000" class="form-control">
+            </div>
+
+            <div class="row">
+                <div class="card-header mt-3">
+                    <h1 class="h3 d-inline align-middle text-secondary">Pending Members Information</h1>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <button class="btn btn-success text-white mt-2" type="button" id="Reset" name="Reset" style="margin-left:01%;">Reset</button>
+                    </div>
+                </div>
+                <div class="container-fluid p-0">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <table id="PendingPersonstablesGrid" class="table table-striped" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Policy No.</th>
+                                                <th>Quotation Code</th>
+                                                <th>Name</th>
+                                                <th>CNIC</th>
+                                                <th>Age</th>
+                                                <th>Registration Number</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="spinner-box" hidden>
+        <img src="/Assets/img/photos/loader_img.gif" id="loaderImage" />
+        <div id="loader_text" class="text-white pt-2 text-center">Please wait...While Pending Customers are being Loaded!</div>
+    </div>
+</form>

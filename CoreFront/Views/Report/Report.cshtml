@@ -1,0 +1,79 @@
+﻿@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Configuration.Json
+@inject IConfiguration Configuration
+
+
+@{
+    ViewData["Title"] = "Policy Reporting";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/json2/20130526/json2.min.js"></script>
+
+<script>
+   const app_host_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_IP").Value);
+    const api_port_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_PNO").Value);
+    const Result_API = (app_host_API + ":" + api_port_API);
+
+    const app_host_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_IP").Value);
+    const api_port_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_PNO").Value);
+    const Result_Front = (app_host_Front + ":" + api_port_Front);
+
+</script>
+
+<script type="text/javascript">
+
+    //$(document).ready(function () {
+    //    $("#Print_Receipt").on('click', function () {
+    //        var ftpr_rcpt_refno1 = $("#ftpr_rcpt_refno1").val();
+    //        // alert("Hello, In Print_Receipt Mehtid" + ftpr_rcpt_refno1);
+    //        $.ajax({
+    //            type: 'POST',
+    //            url: "/Reporting/Print_Receipt?ftpr_rcpt_refno1=" + ftpr_rcpt_refno1 + "",
+    //            contentType: "application/json; charset=utf-8",
+    //            dataType: "json",
+    //            processData: true,
+    //            success: function (repo) {
+    //                alert("File is uploaded successfully");
+    //            },
+    //            error: function (request, status, error) {
+    //                alert("Error " + error.responseText);
+    //            }
+    //        });
+    //    });
+    //});
+
+</script>
+<form method="post" action="/Reporting/Print_Receipt" class="form-horizontal">
+    <div class="row">
+        <input class="form-control" name="ftpr_rcpt_refno1" id="ftpr_rcpt_refno1" hidden="hidden" value="QT100000041">
+        <div class="mb-3 col-md-3">
+            <button class="btn btn-success" type="submit" id="Print_Receipt" name="Print_Receipt">Print Receipt</button>
+        </div>
+    </div>@*Ended Search Option*@
+
+
+
+    <input id="IsActive" name="IsActive" type="checkbox" value="false">
+    <input id="IsActive1" name="IsActive" type="checkbox" value="false">
+
+
+    <script>
+        $('#IsActive').change(function () {
+            var chk = $("#IsActive")
+            var IsChecked = chk[0].checked
+            if (IsChecked) {
+                chk.attr('checked', 'checked')
+            }
+            else {
+                chk.removeAttr('checked')
+            }
+            chk.attr('value', IsChecked)
+        });
+    </script>
+
+</form>

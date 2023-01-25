@@ -1,0 +1,117 @@
+﻿
+@{ ViewData["Title"] = "Customer File Upload";
+    Layout = "~/Views/Shared/_Layout.cshtml"; }
+
+@model CoreFront.Models.CustomerMemberUpload
+@addTagHelper*, Microsoft.AspNetCore.Mvc.TagHelpers
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script type="text/javascript">
+
+    window.setTimeout(function () {
+        $(".alert").fadeTo(500, 0).slideUp(500, function () {
+            $(this).remove();
+        });
+    }, 4000);
+
+    $(function () {
+        $('#btnupload').on('click', function () {
+            var fileExtension = ['csv'];
+            var filename = $('#fileupload').val();
+            if (filename.length == 0) {
+                alert("Please select a file.");
+                return false;
+            }
+            else {
+                var extension = filename.replace(/^.*\./, '');
+                if ($.inArray(extension, fileExtension) == -1) {
+                    alert("Please select only CVS files for Customer Uploading.");
+                    return false;
+                }
+            }
+            var fdata = new FormData();
+            var fileUpload = $("#fileupload").get(0);
+            var files = fileUpload.files;
+            fdata.append(files[0].name, files[0]);
+            $.ajax({
+                "async": true,
+                "crossDomain": true,
+                type: "POST",
+                url: "/Home/ImportDataInGrid",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("XSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+
+                },
+                data: fdata,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    if (response.length == 0)
+                        alert('Some error occured while uploading');
+                    else {
+                        //$('#divPrint').html(response);
+                        $('#divPrint').html(response);
+                    }
+                },
+                error: function (e) {
+                    $('#divPrint').html(e.responseText);
+                }
+            });
+        })
+    });
+</script>
+<form asp-controller="Home" asp-action="" id="frmdetl">
+    <div class="container-fluid p-0">
+        <div>
+            <div class="row">
+            </div>
+        </div>
+        <div class="mb-3">
+            <h1 class="card-title" style="font-weight:600; font-size:1.3rem; font-weight:bold">Customer File Uploading</h1>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <input type="file" id="fileupload" name="file" class="form-control"  accept=".csv"/>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="button" name="Upload" value="Upload" id="btnupload" class="btn btn-primary" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
+                    </div>
+                    <div class="col-md-3">
+                        <input type="submit" name="Export" value="Save" id="btnExport" class="btn btn-primary" asp-action="Export" />
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <div class="table-wrapper-scroll-y my-custom-scrollbar">
+                        <div class="pagination">
+                            <div id="divPrint">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    @if (TempData["PostcustomerFileUploading"] != null)
+                    {<div  class="alert alert-success alert-dismissible fade show" role="alert">
+                            <strong>
+                            Success  
+                            </strong> @TempData["PostcustomerFileUploading"]
+                     </div>
+                     }
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

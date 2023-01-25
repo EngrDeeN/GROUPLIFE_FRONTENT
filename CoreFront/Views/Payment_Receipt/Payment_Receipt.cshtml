@@ -1,0 +1,413 @@
+﻿@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Configuration.Json
+@inject IConfiguration Configuration
+
+
+@{
+    ViewData["Title"] = "Policy Receipting";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/json2/20130526/json2.min.js"></script>
+
+<script>
+   const app_host_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_IP").Value);
+    const api_port_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_PNO").Value);
+    const Result_API = (app_host_API + ":" + api_port_API);
+
+    const app_host_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_IP").Value);
+    const api_port_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_PNO").Value);
+    const Result_Front = (app_host_Front + ":" + api_port_Front);
+
+</script>
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $("#Print_Receipt").on('click', function () {
+            var ftpr_rcpt_refno1 = $("#ftpr_rcpt_refno1").val();
+            // alert("Hello, In Print_Receipt Mehtid" + ftpr_rcpt_refno1);
+            $.ajax({
+                "async": true,
+                "crossDomain": true,
+                type: 'POST',
+                url: "/Reporting/Print_Receipt?ftpr_rcpt_refno1=" + ftpr_rcpt_refno1 + "",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                processData: true,
+                success: function (repo) {
+                    alert("File is uploaded successfully");
+                },
+                error: function (request, status, error) {
+                    alert("Error " + error.responseText);
+                }
+            });
+        });
+    });
+
+    window.setTimeout(function () {
+        $(".alert").fadeTo(500, 0).slideUp(500, function () {
+            $(this).remove();
+        });
+    }, 4000);
+
+    $.ajax({
+        "async": true,
+        "crossDomain": true,
+        url: "http://" + Result_API + "/api/Receipting/Get_Bank_List",
+        type: "GET",
+        contentType: "application/json; charset=utf-8",
+        datatype: JSON,
+        timeout: 5000,
+        cache: false,
+        success: function (result) {
+            $(result).each(function () {
+                $("#FSBK_BANK_ID").append($("<option></option>").val(this.FSBK_BANK_ID).html(this.FSBK_BANK_NAME));
+            });
+        },
+        error: function (data) { }
+    });
+
+    $.ajax({
+        "async": true,
+        "crossDomain": true,
+        url: "http://" + Result_API + "/api/GlobalParameters/GetGlobalParamGetCurrencyList",
+        type: "GET",
+        contentType: "application/json; charset=utf-8",
+        datatype: JSON,
+        timeout: 5000,
+        cache: false,
+        success: function (result) {
+            $(result).each(function () {
+                $("#FSCR_CURRENCY_CODE").append($("<option></option>").val(this.FSSC_COUNTRY_ID).html(this.FSCR_CURRENCY_DESCR));
+            });
+        },
+        error: function (data) { }
+    });
+
+    $.ajax({
+        "async": true,
+        "crossDomain": true,
+        url: "http://" + Result_API + "/api/Receipting/GET_VOUCHER_LIST",
+        type: "GET",
+        contentType: "application/json; charset=utf-8",
+        datatype: JSON,
+        timeout: 5000,
+        cache: false,
+        success: function (result) {
+            $(result).each(function () {
+                $("#VoucherNo").append($("<option></option>").val(this.FTPR_GLVOUCHR_NO).html(this.FTPR_GLVOUCHR_NO));
+            });
+        },
+        error: function (data) { }
+    });
+
+  
+    $(document).ready(function () {
+        $('#btnPolicyNoSearch').click(function (e) {
+            e.preventDefault();
+            var P_DOCUMENT_ID_ = $("#P_DOCUMENT_ID").val();
+            var VoucherNo_ = $("#VoucherNo").val();
+            //alert(VoucherNo_);
+            var baseURL = "http://" + Result_API + "/api/Receipting/Get_Valid_Quotation_List/" + P_DOCUMENT_ID_ + "/" + VoucherNo_;
+            $.ajax(baseURL,
+                {
+                    "async": true,
+                    "crossDomain": true,
+                    type: "GET",
+                    cache: false,
+                    contentType: "application/json; charset=utf-8",
+                    datatype: JSON,
+                    timeout: 5000,
+                    success: function (data, status, xhr) {
+                        $(data).each(function () {
+                          
+                            //Edit by Shizra Aijaz
+                            const obj = JSON.stringify(data[0].FTPR_RCPT_POSTD_YN);
+                            const FTPR_RCPT_POSTD_YN = obj.replaceAll('"', '');
+                            //alert(FTPR_RCPT_POSTD_YN);
+
+                            var IsFormValid = false;
+                            if (FTPR_RCPT_POSTD_YN == "X") {
+                                alert("Receipt is Already Processed.");
+                                IsFormValid = false;
+                            }
+
+                            if (data) {
+
+                                var _FTPR_INSTR_DATE = new Date(this.FTPR_INSTR_DATE);
+                                var day = ('0' + _FTPR_INSTR_DATE.getDate()).slice(-2);
+                                var month = ('0' + _FTPR_INSTR_DATE.getMonth()).slice(-2);
+                                month = Number(month) + 1;
+                                if (month < 10)
+                                    month = '0' + month.toString();
+                                var _FTPR_INSTR_DATE = _FTPR_INSTR_DATE.getFullYear() + "-" + (month) + "-" + (day);
+
+
+                                var _FTPR_RCPT_VALUDATE = new Date(this.FTPR_RCPT_VALUDATE);
+                                var day = ('0' + _FTPR_RCPT_VALUDATE.getDate()).slice(-2);
+                                var month = ('0' + _FTPR_RCPT_VALUDATE.getMonth()).slice(-2);
+                                month = Number(month) + 1;
+                                if (month < 10)
+                                    month = '0' + month.toString();
+                                var _FTPR_RCPT_VALUDATE = _FTPR_RCPT_VALUDATE.getFullYear() + "-" + (month) + "-" + (day);
+
+                                
+                                $("#FTPR_GLVOUCHR_NO").val(this.FTPR_GLVOUCHR_NO);
+                                $("#FTPR_RCPT_VALUDATE").val(_FTPR_RCPT_VALUDATE);
+                                $("#FSPM_PRODUCTION_LINE").val(this.BUSINESS_TYPE);
+                                $("#FTPR_RECEIPT_TYPE").val(this.FTPR_RECEIPT_TYPE);
+                                $("#FTPR_PYMET_FSCD_DID").val(this.FTPR_PYMET_FSCD_DID);
+                                $("#FTPR_INSTR_NO").val(this.FTPR_INSTR_NO);
+                                $("#FTPR_INSTR_DATE").val(_FTPR_INSTR_DATE);
+                                $("#FSCR_CURRENCY_CODE").val(this.FSCR_CURRENCY_CODE);
+                                $("#FSBK_BANK_ID").val(this.FSBK_BANK_ID);
+                                $("#FTPR_INSTR_BNK_BRCHNAME").val(this.FTPR_INSTR_BNK_BRCHNAME);
+                                $("#FTPR_ACCOUNT_TYPE").val(this.FTPR_ACCOUNT_TYPE);
+                                $("#FTPR_ACCOUNT_TITLE").val(this.FTPR_ACCOUNT_TITLE);
+                                $("#FTPR_ACCOUNT_NO").val(this.FTPR_ACCOUNT_NO);
+                                $("#FTPR_COLL_AMOUNT").val(this.FTPR_COLL_AMOUNT);
+                                $("#FTPR_DUE_AMOUNT").val(this.FTPR_DUE_AMOUNT);
+                                $("#FTPR_DUE_AMOUNT").val(this.DUE_AMOUNT);
+                                $("#FTPR_APPROVD_AMT").val(this.DUE_AMOUNT);
+                                $("#ftpr_rcpt_refno1").val(this.FGQH_QUOTATHDR_CODE);
+                                //alert(this.FTPR_RCPT_POSTD_YN)
+                                $("#FTPR_RCPT_POSTD_YN").val(this.FTPR_RCPT_POSTD_YN);                           
+
+                            } else {
+                                alert('No Data Found for given criteria.');
+                            }
+                           
+                        });
+                    },
+                    error: function (jqXhr, textStatus, errorMessage) { // error callback
+                        alert('error, Counld not found Result as provided parameter.' + errorMessage);
+                         var go_to_url = "http://" + Result_Front + "/Receipting";
+                         document.location.href = go_to_url;
+                    }
+                }
+            );
+        });
+    });
+
+
+    $(document).ready(function () {
+        $("#FTPR_PYMET_FSCD_DID").change(function () {
+            // alert(0);
+            var x = $(this).val();
+            if (x == 1) {
+                $("#FTPR_INSTR_NO").attr("readOnly", "true");
+                $("#FTPR_INSTR_DATE").attr("readOnly", "true");
+                $("#FSBK_BANK_ID").attr("disabled", "disabled");
+                $("#FTPR_INSTR_BNK_BRCHNAME").attr("readOnly", "true");
+                $("#FTPR_ACCOUNT_TYPE").attr("disabled", "disabled");
+                $("#FTPR_ACCOUNT_TITLE").attr("readOnly", "true");
+                $("#FTPR_ACCOUNT_NO").attr("readOnly", "true");
+            }
+            if (x == 2) {
+                $("#FTPR_INSTR_NO").attr("readOnly", false);
+                $("#FTPR_INSTR_DATE").attr("readOnly", false);
+                $("#FSBK_BANK_ID").attr("disabled", false);
+                $("#FTPR_INSTR_BNK_BRCHNAME").attr("readOnly", false);
+                $("#FTPR_ACCOUNT_TYPE").attr("disabled", false);
+                $("#FTPR_ACCOUNT_TITLE").attr("readOnly", false);
+                $("#FTPR_ACCOUNT_NO").attr("readOnly", false);
+            }
+            if (x == 3) {
+                $("#FTPR_INSTR_NO").attr("readOnly", false);
+                $("#FTPR_INSTR_DATE").attr("readOnly", false);
+                $("#FSBK_BANK_ID").attr("disabled", false);
+                $("#FTPR_INSTR_BNK_BRCHNAME").attr("readOnly", false);
+                $("#FTPR_ACCOUNT_TYPE").attr("disabled", false);
+                $("#FTPR_ACCOUNT_TITLE").attr("readOnly", false);
+                $("#FTPR_ACCOUNT_NO").attr("readOnly", false);
+            }
+            if (x == 4) {
+                $("#FTPR_INSTR_NO").attr("readOnly", false);
+                $("#FTPR_INSTR_DATE").attr("readOnly", false);
+                $("#FSBK_BANK_ID").attr("readOnly", false);
+                $("#FTPR_INSTR_BNK_BRCHNAME").attr("readOnly", false);
+                $("#FTPR_ACCOUNT_TYPE").attr("readOnly", false);
+                $("#FTPR_ACCOUNT_TITLE").attr("readOnly", false);
+                $("#FTPR_ACCOUNT_NO").attr("readOnly", false);
+            }
+        });
+    });
+
+
+</script>
+
+<form method="post" action="/Payment_Receipt/SaveUpdatePolicyReceipting" class="form-horizontal">
+    @Html.AntiForgeryToken()
+    @*<main class="content">
+        <div class="container-fluid p-0">*@
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <h1 class="card-title" style="font-weight: 600; font-size: 1.3rem; font-weight: bold">Policy Receipt Generating</h1>
+                    </div>
+                    <div class="row">
+                        <div class="row">
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="P_DOCUMENT_ID " style="font-weight:bold">Quatation No:</label>
+                                <input type="text" class="form-control" name="P_DOCUMENT_ID" id="P_DOCUMENT_ID" placeholder="12775">
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="VoucherNo" style="font-weight:bold">Voucher No:</label>
+                                <select class="form-select" name="VoucherNo" id="VoucherNo" required>
+                                    <option value="X">--Select--</option>
+                                </select>
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <div> <label class="text-success" for="btnInstSearch " style="font-weight:bold"></label></div>
+                                <button class="btn btn-secondary" type="button" name="btnPolicyNoSearch" id="btnPolicyNoSearch" onclick="btnPolicyNoSearch" value="Search ">Go!</button>
+                            </div>
+                        </div>@*Ended Customer Basic Information 1st Phase*@
+
+
+                        <div class="col-md-4">
+                            @if (TempData["Payment_Receipt"] != null)
+                            {<div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <strong>
+                                        Success
+                                    </strong> @TempData["Payment_Receipt"]
+                                </div>}
+                        </div>
+                        <div>
+                            <input class="form-control" name="ftpr_rcpt_refno1" id="ftpr_rcpt_refno1" hidden="hidden">
+                            <input class="form-control" name="FTPR_GLVOUCHR_NO" id="FTPR_GLVOUCHR_NO" hidden="hidden">
+
+                        </div>
+                    </div>
+                </div>
+            </div>@*Ended Search Option*@
+
+            <div class="tab-content">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <h1 class="card-title" style="font-weight:bold">Policy Receipting</h1>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FTPR_VOUCHR_NO" style="font-weight:bold">Voucher no:<span>  *</span></label>
+                                <input class="form-control" readonly="readonly" placeholder="Voucher no" name="FTPR_VOUCHR_NO" id="FTPR_VOUCHR_NO" value="@TempData["RCPT_NO"]" type="text">
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FTPR_RCPT_VALUDATE" style="font-weight:bold">Voucher Date:<span>  *</span></label>
+                                <input class="datefield form-control" name="FTPR_RCPT_VALUDATE" id="FTPR_RCPT_VALUDATE" type="date" />
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FSPM_PRODUCTION_LINE" style="font-weight:bold">Business Type:</label>
+                                <input class="form-control" readonly="readonly" placeholder="Business Type" name="FSPM_PRODUCTION_LINE" id="FSPM_PRODUCTION_LINE" type="text">
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FTPR_RECEIPT_TYPE" style="font-weight:bold">Receipt Type:</label>
+                                <select class="form-select" name="FTPR_RECEIPT_TYPE" id="FTPR_RECEIPT_TYPE">
+                                    <option value="">--Select--</option>
+                                    <option value="1">Proposal Despite</option>
+                                    <option value="2">Top-up</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FTPR_PYMET_FSCD_DID" style="font-weight:bold">Instrument Type :</label>
+                                <select class="form-select" name="FTPR_PYMET_FSCD_DID" id="FTPR_PYMET_FSCD_DID">
+                                    <option value="">--Select--</option>
+                                    <option value="1">Cash</option>
+                                    <option value="2">Cheque</option>
+                                    <option value="3">Direct Dabit</option>
+                                    <option value="4">Pay Order</option>
+                                </select>
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FTPR_INSTR_NO" style="font-weight:bold">Instrument Number:<span>  *</span></label>
+                                <input class="form-control" placeholder="Branch name" name="FTPR_INSTR_NO" id="FTPR_INSTR_NO" type="text">
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FTPR_INSTR_DATE" style="font-weight:bold">Instrument Date:<span>  *</span></label>
+                                <input class="datefield form-control" name="FTPR_INSTR_DATE" id="FTPR_INSTR_DATE" type="date" />
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label for="FSCR_CURRENCY_CODE" class="text-success" style="font-weight:bold">Currency:<span>  *</span></label>
+                                <select class="form-select" name="FSCR_CURRENCY_CODE" id="FSCR_CURRENCY_CODE">
+                                    <option value="">--Select--</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FSBK_BANK_ID" style="font-weight:bold">Bank Name:</label>
+                                <select class="form-select" name="FSBK_BANK_ID" id="FSBK_BANK_ID">
+                                    <option value="">--Select--</option>
+                                </select>
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FTPR_INSTR_BNK_BRCHNAME" style="font-weight:bold">Branch name:<span>  *</span></label>
+                                <input class="form-control" placeholder="Branch name" name="FTPR_INSTR_BNK_BRCHNAME" id="FTPR_INSTR_BNK_BRCHNAME" type="text">
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FTPR_ACCOUNT_TYPE" style="font-weight:bold">Account Type:</label>
+                                <select class="form-select" name="FTPR_ACCOUNT_TYPE" id="FTPR_ACCOUNT_TYPE">
+                                    <option value="">--Select--</option>
+                                    <option value="1">Saving</option>
+                                    <option value="2">Current</option>
+                                </select>
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FTPR_ACCOUNT_TITLE" style="font-weight:bold">Account Title:<span>  *</span></label>
+                                <input class="form-control" placeholder="Account Title" name="FTPR_ACCOUNT_TITLE" id="FTPR_ACCOUNT_TITLE" type="text">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FTPR_ACCOUNT_NO" style="font-weight:bold">Account Number:<span>  *</span></label>
+                                <input class="form-control" placeholder="Account Number" name="FTPR_ACCOUNT_NO" id="FTPR_ACCOUNT_NO" type="text">
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FTPR_COLL_AMOUNT" style="font-weight:bold">Contribution Amount:<span>  *</span></label>
+                                <input class="form-control" placeholder="Contribution Amount" name="FTPR_COLL_AMOUNT" id="FTPR_COLL_AMOUNT" type="text">
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FTPR_DUE_AMOUNT" style="font-weight:bold">Due Amount:<span>  *</span></label>
+                                <input class="form-control" readonly="readonly" placeholder="Due Amount" name="FTPR_DUE_AMOUNT" id="FTPR_DUE_AMOUNT" type="text">
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FTPR_APPROVD_AMT" style="font-weight:bold">Total Amount:<span>  *</span></label>
+                                <input class="form-control" readonly="readonly" placeholder="Total Amount" name="FTPR_APPROVD_AMT" id="FTPR_APPROVD_AMT" type="text">
+                            </div>
+
+
+                        </div>
+                        <div class="row">
+                            <div class="mb-2 col-md-3">
+                                <label class="text-success" for="FTPR_RCPT_POSTD_YN" style="font-weight:bold">Receipt Posted:</label>
+                                <select class="form-select" name="FTPR_RCPT_POSTD_YN" id="FTPR_RCPT_POSTD_YN">
+                                    <option value="">--Select--</option>
+                                    <option value="Y">Yes</option>
+                                    <option value="N">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="mb-3 col-md-3">
+                                <button class="btn btn-success" type="submit" id="SaveUpdatePolicyReceipting" name="SaveUpdatePolicyReceipting">Generate Receipt</button>
+                            </div>
+                            <div class="mb-3 col-md-3">
+                                <button class="btn btn-success" type="button" id="Print_Receipt" name="Print_Receipt">Print Receipt</button>
+                            </div>
+                        </div>@*Ended Search Option*@
+
+                        <bold-report-viewer id="viewer"></bold-report-viewer>
+                    </div>
+                </div>
+            </div>
+        @*</div>
+    </main>*@
+</form>
+

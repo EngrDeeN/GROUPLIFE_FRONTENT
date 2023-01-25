@@ -1,0 +1,263 @@
+﻿@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Configuration.Json
+@inject IConfiguration Configuration
+
+@{
+    ViewData["Title"] = "Policy Issuance";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<script>
+   const app_host_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_IP").Value);
+    const api_port_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_PNO").Value);
+    const Result_API = (app_host_API + ":" + api_port_API);
+
+    const app_host_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_IP").Value);
+    const api_port_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_PNO").Value);
+    const Result_Front = (app_host_Front + ":" + api_port_Front);
+
+</script>
+
+
+<script type="text/javascript">
+
+    window.setTimeout(function () {
+        $(".alert").fadeTo(500, 0).slideUp(500, function () {
+            $(this).remove();
+        });
+    }, 4000);
+
+
+
+    $(document).ready(function () {
+        $('#btnPolicyNoSearch').click(function (e) {
+            e.preventDefault();
+            var FGQH_QUOTATHDR_CODESER = $("#FGQH_QUOTATHDR_CODESER").val();
+            var baseURL = "http://" + Result_API + "/api/Quotation/GetQuotationDetails/" + FGQH_QUOTATHDR_CODESER;
+            $(".spinner-box").removeAttr("hidden", true);
+            setTimeout(function () {
+                $.ajax(baseURL,
+                    {
+                        "async": true,
+                        "crossDomain": true,
+                        type: "GET",
+                        cache: false,
+                        contentType: "application/json; charset=utf-8",
+                        datatype: JSON,
+                        timeout: 5000,
+                        success: function (data, status, xhr) {
+                            $(data).each(function () {
+                                if (data) {
+                                    var IsFormValid = false;
+
+                                    $("#FGQH_QUOTATHDR_ID").val(this.FGQH_QUOTATHDR_ID);
+                                    $("#FGQH_QUOTATHDR_CODE").val(this.FGQH_QUOTATHDR_CODE);
+
+                                    var FSLO_LOCATION_ID_ = this.FSLO_LOCATION_ID;
+                                    $("#FGQH_WITHRCPT_YN").val(this.FGQH_WITHRCPT_YN);
+
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        url: "http://" + Result_API + "/api/Institution/GetInstitutionDetails/" + FSLO_LOCATION_ID_,
+                                        type: "GET",
+                                        timeout: 5000,
+                                        cache: false,
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        success: function (result) {
+                                            $(result).each(function () {
+                                                // $("#FSLO_LOCATION_ID").append($("<option></option>").val(this.FSSI_INSTITUTE_ID).html(this.FSSI_DESCRIPTION));
+                                                $("#FSLO_LOCATION_ID").val(this.FSSI_DESCRIPTION);
+                                            });
+                                        },
+                                        error: function (data) { }
+                                    });
+
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        url: "http://" + Result_API + "/api/GlobalParameters/GetLocationList/" + FSLO_LOCATION_ID_,
+                                        type: "GET",
+                                        timeout: 5000,
+                                        cache: false,
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        success: function (result) {
+                                            $(result).each(function () {
+                                                $("#FSLO_LOCATION_ID2").val(this.FSLO_DESCRIPTION);
+                                            });
+                                        },
+                                        error: function (data) { }
+                                    });
+
+                                    var FSPM_PRODUCT_ID_ = this.FSPM_PRODUCT_ID;
+
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        type: "GET",
+                                        url: "http://" + Result_API + "/api/Product/GetProductDetailsById/" + FSPM_PRODUCT_ID_,
+                                        cache: false,
+                                        timeout: 5000,
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        success: function (data) {
+                                            if (data.length > 0) {
+                                                $("#FSPM_PRODUCT_DESP").val(data[0].FSPM_PRODUCT_DESP);
+                                            }
+                                        }
+                                    });
+
+
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        type: "GET",
+                                        url: "http://" + Result_API + "/api/Product/GetProductDetailsById/" + FSPM_PRODUCT_ID_,
+                                        cache: false,
+                                        timeout: 5000,
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        success: function (data) {
+                                            if (data.length > 0) {
+                                                $("#FSPM_PRODUCT_DESP").val(data[0].FSPM_PRODUCT_DESP);
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    alert('No Data Found for given criteria.');
+                                }
+                            });
+                        },
+                        error: function (jqXhr, textStatus, errorMessage) { // error callback
+                            alert('error, Counld not found Result as provided parameter.' + errorMessage);
+                        }
+                    }
+                );
+                $(".spinner-box").attr("hidden", true)
+            }, 2000)
+        });
+    });
+
+    $(document).ready(function () {
+        $('form input').keydown(function (event) {
+            if (event.keyCode == 13) {
+                event.preventDefault();
+                return false;
+            }
+        });
+
+        $('#PolicyIssuance').click(function (e) {
+            var txtFormIssues = '';
+            var IsFormValid = false;
+
+            if ($("#FGQH_WITHRCPT_YN").val() == 'N') {
+                alert("Please generate Quoatation Receipt");
+                IsFormValid = false;
+            } else {
+                IsFormValid = true;
+                $("#saving_spinner").removeAttr("hidden", true);
+            }
+            return IsFormValid;
+        });
+    });
+</script>
+
+<form method="post" action="/New_Business/SaveUpdatePolicyIssue" class="form-horizontal">
+    @Html.AntiForgeryToken()
+    @*<main class="content">
+        <div class="container-fluid p-0">*@
+    <div class="card">
+        <div class="card-body">
+            <div class="row mt-2">
+                <h1 class="h3 text-secondary">Policy Issuance Managment</h1>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="text-white" for="PolicyNoSearch" style="font-weight:bold">Policy No Search:</label>
+                </div>
+                <div class="input-group">
+                    <button class="btn btn-secondary" type="button" name="btnPolicyNoSearch" id="btnPolicyNoSearch" onclick="btnPolicyNoSearch" value="Search ">Go!</button>
+                    <input type="text" name="FGQH_QUOTATHDR_CODESER" id="FGQH_QUOTATHDR_CODESER" style="width:50%" placeholder="QT10000001" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    @if (TempData["successUnderWritting"] != null)
+                    {<div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <strong>
+                                Success
+                            </strong> @TempData["successUnderWritting"]
+                        </div>}
+                </div>
+                <div>
+                    <input class="form-control" name="CompanyRow" id="CompanyRow" hidden="hidden">
+                    <input class="form-control" name="FGQH_WITHRCPT_YN" id="FGQH_WITHRCPT_YN" hidden="hidden">
+                    <input class="form-control" name="FGQH_QUOTATHDR_ID" id="FGQH_QUOTATHDR_ID" type="text" hidden="hidden">
+
+                </div>
+            </div>
+        </div>
+        <!--</div>-->@*Ended Search Option*@
+
+        <!--<div class="tab-content">
+            <div class="card">-->
+        <div class="card-body">
+            <div class="row">
+                <h1 class="h4 mb-3 text-secondary">Policy Issuance</h1>
+                <div class="mb-2 col-md-3">
+                    <label class="text-success" for="FGQH_QUOTATHDR_CODE" style="font-weight:bold">Quotation No:<span class="text-danger">*</span></label>
+                    <input class="form-control" readonly="readonly" placeholder="Quotation No" name="FGQH_QUOTATHDR_CODE" id="FGQH_QUOTATHDR_CODE" type="text">
+                </div>
+                <div class="mb-2 col-md-3">
+                    <label class="text-success" for="FSLO_LOCATION_ID" style="font-weight:bold">Company Name:<span class="text-danger">*</span></label>
+                    <input class="form-control" readonly="readonly" placeholder="Company Name" name="FSLO_LOCATION_ID" id="FSLO_LOCATION_ID" type="text">
+                </div>
+                <div class="mb-2 col-md-3">
+                    <label class="text-success" for="FSPM_PRODUCT_DESP" style="font-weight:bold">Plan:<span class="text-danger">*</span></label>
+                    <input class="form-control" readonly="readonly" placeholder="Plan Name" name="FSPM_PRODUCT_DESP" id="FSPM_PRODUCT_DESP" type="text">
+                </div>
+                <div class="mb-2 col-md-3">
+                    <label class="text-success" for="FSLO_LOCATION_ID2" style="font-weight:bold">Branch Name:<span class="text-danger">*</span></label>
+                    <input class="form-control" readonly="readonly" placeholder="Branch Name" name="FSLO_LOCATION_ID2" id="FSLO_LOCATION_ID2" type="text">
+                </div>
+            </div>
+            <div class="row">
+                <div class="mb-2 col-md-3">
+                    <label class="text-success" for="FSLO_LOCATION_ID2" style="font-weight:bold">Branch Name:<span class="text-danger">*</span></label>
+                    <input class="form-control" readonly="readonly" placeholder="Branch Name" name="FSLO_LOCATION_ID2" id="FSLO_LOCATION_ID2" type="text">
+                </div>
+                <div class="mb-2 col-md-3">
+                    <label class="text-success" for="" style="font-weight:bold">Region Name:<span class="text-danger">*</span></label>
+                    <input class="form-control" readonly="readonly" placeholder="Region Name" name="" id="" type="text">
+                </div>
+                <div class="mb-2 col-md-3">
+                    <label class="text-success" for="Policy_No" style="font-weight:bold">Policy Number:<span class="text-danger">*</span></label>
+                    <input class="form-control" readonly="readonly" placeholder="Policy Number" name="Policy_No" id="Policy_No" value="@TempData["NEWPOLNO"]" type="text">
+                </div>
+                <div class="mb-2 col-md-3">
+                    <label class="text-success" for="Policy_Commission" style="font-weight:bold">Policy Commission:<span class="text-danger">*</span></label>
+                    <input class="form-control" readonly="readonly" placeholder="Policy Commission" name="Policy_Commission" id="Policy_Commission" value="@TempData["COMMANT"]" type="text">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="mb-3 col-md-3">
+                    @*<input class="form-control" name=" FGQH_QUOTATHDR_ID" id=" FGQH_QUOTATHDR_ID" type="text" >*@
+                    <button class="btn btn-success" type="submit" id="PolicyIssuance" name="PolicyIssuance">Generate Policy</button>
+                </div>
+            </div>@*Ended Search Option*@
+        </div>
+    </div>
+    <div class="spinner-box" hidden>
+        <img src="/Assets/img/photos/loader_img.gif" id="loaderImage" />
+        <div id="loader_text" class="text-white pt-2 text-center">Please wait...While Quotation Data is being Loaded!</div>
+    </div>
+    <div id="saving_spinner" hidden>
+        <img src="/Assets/img/photos/loader_img.gif" id="loaderImage" />
+        <div id="loader_text" class="text-white pt-2 text-center">Please wait...While Policy is being Issued!</div>
+    </div>
+    @*</div>
+            </div>
+        </main>*@
+</form>
+

@@ -1,0 +1,242 @@
+﻿@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Configuration.Json
+@inject IConfiguration Configuration
+
+@{
+    ViewData["Title"] = "Quotation Managment";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<script>
+   const app_host_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_IP").Value);
+    const api_port_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_PNO").Value);
+    const Result_API = (app_host_API + ":" + api_port_API);
+
+    const app_host_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_IP").Value);
+    const api_port_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_PNO").Value);
+    const Result_Front = (app_host_Front + ":" + api_port_Front);
+
+</script>
+
+
+<script type="text/javascript">
+    window.setTimeout(function () {
+        $(".alert").fadeTo(500, 0).slideUp(500, function () {
+            $(this).remove();
+        });
+    }, 4000);
+
+    $(document).ready(function () {
+        $('#btnQuoataMangtSearch').click(function (e) {
+            e.preventDefault();
+
+            var FGQH_QUOTATHDR_CODESER = $("#FGQH_QUOTATHDR_CODESER").val();
+            var baseURL = "http://" + Result_API + "/api/Quotation/GetQuotationDetails/" + FGQH_QUOTATHDR_CODESER;
+            $(".spinner-box").removeAttr("hidden", true);
+            setTimeout(function () {
+                $.ajax(baseURL,
+                    {
+                        "async": true,
+                        "crossDomain": true,
+                        type: "GET",
+                        cache: false,
+                        contentType: "application/json; charset=utf-8",
+                        datatype: JSON,
+                        timeout: 5000,
+                        success: function (data, status, xhr) {
+                            $(data).each(function () {
+                                if (data) {
+
+                                    $("#FGQH_QUOTATHDR_ID").val(this.FGQH_QUOTATHDR_ID);
+                                    var FSLO_LOCATION_ID_ = this.FSLO_LOCATION_ID;
+
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        url: "http://" + Result_API + "/api/Institution/GetInstitutionDetails/" + FSLO_LOCATION_ID_,
+                                        type: "GET",
+                                        timeout: 5000,
+                                        cache: false,
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        success: function (result) {
+                                            $(result).each(function () {
+                                                // $("#FSLO_LOCATION_ID").append($("<option></option>").val(this.FSSI_INSTITUTE_ID).html(this.FSSI_DESCRIPTION));
+                                                $("#FSLO_LOCATION_ID").val(this.FSSI_DESCRIPTION);
+                                            });
+                                        },
+                                        error: function (data) { }
+                                    });
+
+                                    var FSPM_PRODUCT_ID_ = this.FSPM_PRODUCT_ID;
+
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        type: "GET",
+                                        url: "http://" + Result_API + "/api/Product/GetProductDetailsById/" + FSPM_PRODUCT_ID_,
+                                        cache: false,
+                                        timeout: 5000,
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        success: function (data) {
+                                            if (data.length > 0) {
+                                                $("#FSPM_PRODUCT_DESP").val(data[0].FSPM_PRODUCT_DESP);
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    alert('No Data Found for given criteria.');
+                                }
+                                if ($("#FGQH_QUOTATHDR_ID").val() == '') {
+
+                                    if (confirm("Quotation Management with this Quotation Code  doesn't exist.")) {
+                                        var go_to_url = "http://" + Result_Front + "/QuotationManagment";
+                                        document.location.href = go_to_url;
+                                    }
+                                }
+                            });
+                        },
+                        error: function (jqXhr, textStatus, errorMessage) { // error callback
+                            alert('error, Counld not found Result as provided parameter.' + errorMessage);
+                        }
+                    }
+                );
+                $(".spinner-box").attr("hidden", true)
+            }, 2000)
+        });
+    });
+
+    $(document).ready(function () {
+        $("#SaveUpdateQuotaManagt").click(function () {
+            var IsFormValid = false;
+            if ($('#FGQH_QUOTATHDR_ID').val() == '') {
+                alert('Please Enter Quotation Number\n');
+                IsFormValid = false;
+            } else if ($('#QuotationDuplicate').val() == '') {
+                alert('Please Select if Quotation to be duplicated.\n');
+                IsFormValid = false;
+            } else if ($('#QuotationConfirmed').val() == '') {
+                alert('Please Select if Quotation to be confirmed.\n');
+                IsFormValid = false;
+            } else if ($('#QuotationDelete').val() == '') {
+                alert('Please Select if Quotation to be deleted.\n');
+                IsFormValid = false;
+            } else {
+                IsFormValid = true;
+                $("#saving_spinner").removeAttr("hidden", true);
+            }
+            return IsFormValid;
+        })
+    })
+
+</script>
+
+<form method="post" action="/New_Business/SaveUpdateQuotaManagt" class="form-horizontal">
+    @Html.AntiForgeryToken()
+    @*<main class="content">
+        <div class="container-fluid p-0">*@
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <h1 class="card-title" style="font-weight: 600; font-size: 1.3rem; font-weight: bold">
+                    Quotation Managment
+                </h1>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="text-white" for="QuotationSearch" style="font-weight:bold">Quotation Details Search:</label>
+                </div>
+                <div class="input-group">
+                    <button class="btn btn-secondary" type="button" name="btnQuoataMangtSearch" id="btnQuoataMangtSearch" onclick="btnQuoataMangtSearch" value="Search ">Go!</button>
+                    <input type="text" name="FGQH_QUOTATHDR_CODESER" id="FGQH_QUOTATHDR_CODESER" style="width:50%" placeholder="QT100000001" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    @if (TempData["successPolicMangt"] != null)
+                    {<div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <strong>
+                                Success - 
+                            </strong> @TempData["successPolicMangt"]
+                        </div>}
+                </div>
+                <div>
+                    <input class="form-control" name="CompanyRow" id="CompanyRow" hidden="hidden">
+                    <input class="form-control" name="AgentRow" id="AgentRow" hidden="hidden">
+
+                </div>
+            </div>
+        </div>
+    </div>@*Ended Search Option*@
+
+    <div class="tab-content">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <h1 class="h4 text-secondary" style="font-weight:bold">Quotation Details</h1>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FGQH_QUOTATHDR_ID" style="font-weight:bold">Quotation No:<span class="text-danger">  *</span></label>
+                        <input class="form-control" readonly="readonly" placeholder="Quotation Number" name="FGQH_QUOTATHDR_ID" id="FGQH_QUOTATHDR_ID" type="text">
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FSLO_LOCATION_ID" style="font-weight:bold">Company Name:<span class="text-danger">  *</span></label>
+                        <input class="form-control" readonly="readonly" placeholder="Company Name" name="FSLO_LOCATION_ID" id="FSLO_LOCATION_ID" type="text">
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FSPM_PRODUCT_DESP" style="font-weight:bold">Plan:<span class="text-danger">  *</span></label>
+                        <input class="form-control" readonly="readonly" placeholder="Master Plan" name="FSPM_PRODUCT_DESP" id="FSPM_PRODUCT_DESP" type="text">
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="QuotationDuplicate" style="font-weight:bold">Quotation Duplicate:<span class="text-danger">  *</span></label>
+                        <select class="form-select" name="QuotationDuplicate" id="QuotationDuplicate">
+                            <option value="">--Select--</option>
+                            <option value="Y">Yes</option>
+                            <option value="N">No</option>
+                            <option value="O">Hold</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="QuotationConfirmed" style="font-weight:bold">Quotation Confirmed:<span class="text-danger">  *</span></label>
+                        <select class="form-select" name="QuotationConfirmed" id="QuotationConfirmed">
+                            <option value="">--Select--</option>
+                            <option value="Y">Yes</option>
+                            <option value="N">No</option>
+                            <option value="O">Hold</option>
+                        </select>
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="QuotationDelete" style="font-weight:bold">Quotation Delete:</label>
+                        <select class="form-select" name="QuotationDelete" id="QuotationDelete">
+                            <option value="">--Select--</option>
+                            <option value="Y">Yes</option>
+                            <option value="N">No</option>
+                            <option value="O">Hold</option>
+                        </select>
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="Generated_Quotation" style="font-weight:bold">Generated Quotation:<span class="text-danger">  *</span></label>
+                        <input class="form-control" readonly="readonly" placeholder="Generated Quotation" name="Generated_Quotation" value="@TempData["FGQH_QUOTCODE_NEW"]" id="Generated_Quotation" type="text">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="mb-3 col-md-3">
+                        <button class="btn btn-success" type="submit" id="SaveUpdateQuotaManagt" name="SaveUpdateQuotaManagt">Process</button>
+                    </div>
+                </div>@*Ended Search Option*@
+            </div>
+        </div>
+    </div>
+    <div class="spinner-box" hidden>
+        <img src="/Assets/img/photos/loader_img.gif" id="loaderImage" />
+        <div id="loader_text" class="text-white pt-2 text-center">Please wait...While Quotation Data is being Loaded!</div>
+    </div>
+    <div id="saving_spinner" hidden>
+        <img src="/Assets/img/photos/loader_img.gif" id="loaderImage" />
+        <div id="loader_text" class="text-white pt-2 text-center">Please wait...While Quotation is being Generated!</div>
+    </div>
+
+    @*</div>
+        </main>*@
+</form>

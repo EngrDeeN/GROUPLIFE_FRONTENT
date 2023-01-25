@@ -1,0 +1,9 @@
+.dockerignore
+.editorconfig
+.gitattributes
+*.vs
+\CoreFront\bin
+\CoreFront\obj
+\CoreFront/wwwroot/Assets
+\CoreFront/wwwroot/Resources
+\CoreFront/wwwroot/Uploads

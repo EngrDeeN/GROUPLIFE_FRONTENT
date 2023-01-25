@@ -1,0 +1,379 @@
+﻿@model CoreFront.Models.Customer
+@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Configuration.Json
+@inject IConfiguration Configuration
+
+@{
+    ViewData["Title"] = "Agent Registration";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<meta charset="UTF-8" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.8/css/intlTelInput.css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.8/js/intlTelInput-jquery.min.js"></script>
+
+<script type="text/javascript">
+
+    const app_host_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_IP").Value);
+    const api_port_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_PNO").Value);
+    const Result_API = (app_host_API + ":" + api_port_API);
+
+    const app_host_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_IP").Value);
+    const api_port_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_PNO").Value);
+    const Result_Front = (app_host_Front + ":" + api_port_Front);
+
+</script>
+
+<script type="text/javascript">
+
+
+    $(document).ready(function () {
+        $("#FSAG_PRIMARY_IDENTITY_NO").focusout(function () {
+            let RIMARY_IDENTITY_NO = $("#FSAG_PRIMARY_IDENTITY_NO").val();
+            let n1 = RIMARY_IDENTITY_NO.substring(0, 5);
+            let n2 = RIMARY_IDENTITY_NO.substring(5, 12);
+            let addn = n1 + "-" + n2 + "-" + RIMARY_IDENTITY_NO[RIMARY_IDENTITY_NO.length - 1]
+            $("#FSAG_PRIMARY_IDENTITY_NO").val(addn);
+        })
+    })
+
+
+
+    $(document).ready(function () {
+        $('#btnAgentSesarch').click(function (e) {
+            e.preventDefault();
+            var opsht = '';
+            var FSAG_AGENT_CODE_Ser = $("#FSAG_AGENT_CODE_Ser").val();
+            $(".spinner-box").removeAttr("hidden", true);
+            setTimeout(function () {
+                $.ajax({
+                    "async": true,
+                    "crossDomain": true,
+                    url: " http://" + Result_API + "/api/Agent/GetAgentDetails/" + FSAG_AGENT_CODE_Ser,
+                    type: "GET",
+                    timeout: 5000,
+                    contentType: "application/json; charset=utf-8",
+                    datatype: JSON,
+                    cache: false,
+                    success: function (result) {
+                        $(result).each(function () {
+
+                            var _FSAG_DATE_OF_JOINING = new Date(this.FSAG_DATE_OF_JOINING);
+                            var day = ('0' + _FSAG_DATE_OF_JOINING.getDate()).slice(-2);
+                            var month = ('0' + _FSAG_DATE_OF_JOINING.getMonth()).slice(-2);
+                            month = Number(month) + 1;
+                            if (month < 10)
+                                month = '0' + month.toString();
+                            var _FSAG_DATE_OF_JOINING = _FSAG_DATE_OF_JOINING.getFullYear() + "-" + (month) + "-" + (day);
+
+                            var _FSAG_DATE_OF_LEAVING = new Date(this.FSAG_DATE_OF_LEAVING);
+                            var day = ('0' + _FSAG_DATE_OF_LEAVING.getDate()).slice(-2);
+                            var month = ('0' + _FSAG_DATE_OF_LEAVING.getMonth()).slice(-2);
+                            month = Number(month) + 1;
+                            if (month < 10)
+                                month = '0' + month.toString();
+                            var _FSAG_DATE_OF_LEAVING = _FSAG_DATE_OF_LEAVING.getFullYear() + "-" + (month) + "-" + (day);
+
+                            var _fsag_date_of_confirm = new Date(this.fsag_date_of_confirm);
+                            var day = ('0' + _fsag_date_of_confirm.getDate()).slice(-2);
+                            var month = ('0' + _fsag_date_of_confirm.getMonth()).slice(-2);
+                            month = Number(month) + 1;
+                            if (month < 10)
+                                month = '0' + month.toString();
+                            var _fsag_date_of_confirm = _fsag_date_of_confirm.getFullYear() + "-" + (month) + "-" + (day);
+
+
+                            $("#FSAG_AGENT_CODE").val(this.FSAG_AGENT_CODE);
+                            $("#FSAG_AGENT_NAME").val(this.FSAG_AGENT_NAME);
+                            $("#FSAG_AGENT_TYPE").val(this.FSAG_AGENT_TYPE);
+                            $("#FSNT_IDENTYPE_ID").val(this.FSNT_IDENTYPE_ID);
+                            $("#FSAG_PRIMARY_IDENTITY_NO").val(this.FSAG_PRIMARY_IDENTITY_NO);
+                            $("#FSAG_DATE_OF_JOINING").val(_FSAG_DATE_OF_JOINING);
+                            $("#FSAG_DATE_OF_LEAVING").val(_FSAG_DATE_OF_LEAVING);
+                            $("#FSAG_HAS_CAR_YN").val(this.FSAG_HAS_CAR_YN);
+                            $("#FSAG_SERVICE_STATUS").val(this.FSAG_SERVICE_STATUS);
+                            $("#FSAG_CHNLS_FSCD_DID").val(this.FSAG_CHNLS_FSCD_DID);
+                            $("#FSHL_HIERCL_LEVEL_ID").val(this.FSHL_HIERCL_LEVEL_ID);
+                            $("#FSAG_SALARIED_YN").val(this.FSAG_SALARIED_YN);
+                            $("#FSAG_STATUS").val(this.FSAG_STATUS);
+                            $("#FSAG_STAR_RATED_YN").val(this.FSAG_STAR_RATED_YN);
+                            $("#fsag_date_of_confirm").val(_fsag_date_of_confirm);
+                            $("#fsbk_bank_id").val(this.FSBK_BANK_ID);
+                            $("#fsag_ba_account_no").val(this.FSAG_BA_ACCOUNT_NO);
+                            $("#fsag_direct_agent_yn").val(this.FSAG_DIRECT_AGENT_YN);
+                            $("#fsag_target_salary").val(this.FSAG_TARGET_SALARY);
+                            $("#fsag_probation_period").val(this.FSAG_TARGET_SALARY);
+                            $("#fsag_remarks").val(this.FSAG_REMARKS);
+                            $("#fsag_immedt_supvsr_code").val(this.FSAG_IMMEDT_SUPVSR_CODE);
+
+                        });
+                    },
+                    error: function (data) { }
+                });
+                $(".spinner-box").attr("hidden", true)
+            }, 2000)
+        });
+    });
+
+    //Getting data from DataBase for Payment Method
+    $(document).ready(function () {
+        $.ajax({
+            "async": true,
+            "crossDomain": true,
+            url: "http://" + Result_API + "/api/GlobalParameters/GetGlobalParamByCategory/CHNLS",
+            type: "GET",
+            timeout: 5000,
+            contentType: "application/json; charset=utf-8",
+            datatype: JSON,
+            cache: false,
+            success: function (result) {
+                $(result).each(function () {
+                    $("#FSAG_CHNLS_FSCD_DID").append($("<option></option>").val(this.PARAM_VALUE).html(this.PARAM_NAME));
+                });
+            },
+            error: function (data) { }
+        });
+    });
+
+    $(document).ready(function () {
+        $.ajax({
+            "async": true,
+            "crossDomain": true,
+            url: " http://" + Result_API + "/api/Agent/GetAgentList",
+            type: "GET",
+            timeout: 5000,
+            contentType: "application/json; charset=utf-8",
+            datatype: JSON,
+            cache: false,
+            success: function (result) {
+                $(result).each(function () {
+                    $("#fsag_immedt_supvsr_code").append($("<option></option>").val(this.FSAG_AGENT_CODE).html(this.FSAG_AGENT_NAME));
+                });
+            },
+            error: function (data) { }
+        });
+    });
+
+
+    window.setTimeout(function () {
+        $(".alert").fadeTo(500, 0).slideUp(500, function () {
+            $(this).remove();
+        });
+    }, 4000);
+
+</script>
+
+<form method="post" action="/Agent/SaveUpdateAgent" class="form-horizontal">
+
+    <div class="card">
+        <div class="card-body">
+            <h1 class="card-title mt-2 mb-0" style="font-weight:600; font-size:1.3rem">
+                Agent Registration
+            </h1>
+            <div class="row mt-0 pt-0">
+                <div class="col-md-3">
+                    <label class="text-white" for="CustomerSearch" style="font-weight:bold">Agent Search:</label>
+                </div>
+                <div class="input-group">
+                    <button class="btn btn-secondary" type="button" name="btnAgentSesarch" id="btnAgentSesarch" onclick="btnAgentSesarch" value="Search ">Go!</button>
+                    <input type="text" maxlength="4" name="FSAG_AGENT_CODE_Ser" id="FSAG_AGENT_CODE_Ser" style="width:50%" placeholder="12345" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    @if (TempData["Agent_Registration"] != null)
+                    {<div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <strong>
+                                @TempData["Agent_Registration"]
+                            </strong>
+                        </div>}
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="FSAG_AGENT_CODE" class="text-success" style="font-weight:bold">Agent Code</label>
+                    <input id="FSAG_AGENT_CODE" name="FSAG_AGENT_CODE" placeholder="Agent Code" class="form-control" readonly value="@TempData["FSAG_AGENT_CODE"]" />
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="FSAG_AGENT_NAME" class="text-success" style="font-weight:bold">Agent Name</label>
+                    <input id="FSAG_AGENT_NAME" name="FSAG_AGENT_NAME" placeholder="Agent Name" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label for="FSAG_AGENT_TYPE" class="text-success" style="font-weight:bold">Agent Type</label>
+                    <select id="FSAG_AGENT_TYPE" name="FSAG_AGENT_TYPE" class="form-select">
+                        <option value="">--Select--</option>
+                        <option value="Y">Yes</option>
+                        <option value="N">No</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="FSNT_IDENTYPE_ID" class="text-success" style="font-weight:bold">Identity Typed</label>
+                    @*<input id="FSNT_IDENTYPE_ID" name="FSNT_IDENTYPE_ID" placeholder="ID" class="form-control">*@
+                    <select class="form-select" name="FSNT_IDENTYPE_ID" id="FSNT_IDENTYPE_ID">
+                        <option value="">--Select--</option>
+                        <option value="1">Computerized NIC</option>
+                        <option value="2">Passport No</option>
+                        <option value="3">Social Security No</option>
+                        <option value="4">Driver License No</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="FSAG_PRIMARY_IDENTITY_NO" class="text-success" style="font-weight:bold">Identity Number</label>
+                    <input id="FSAG_PRIMARY_IDENTITY_NO" name="FSAG_PRIMARY_IDENTITY_NO" placeholder="Identity No" class="form-control" type="text" maxlength="13">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="FSAG_DATE_OF_JOINING" class="text-success" style="font-weight:bold">Joining Date</label>
+                    <input type="date" id="FSAG_DATE_OF_JOINING" name="FSAG_DATE_OF_JOINING" placeholder="Joining Date" class="datefield form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label for="FSAG_DATE_OF_LEAVING" class="text-success" style="font-weight:bold">Leaving Date</label>
+                    <input type="date" id="FSAG_DATE_OF_LEAVING" name="FSAG_DATE_OF_LEAVING" placeholder="Leaving Date" class="datefield form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label for="FSAG_HAS_CAR_YN" class="text-success" style="font-weight:bold">Has Vehicle</label>
+                    <select id="FSAG_HAS_CAR_YN" name="FSAG_HAS_CAR_YN" class="form-select">
+                        <option value="">--Select--</option>
+                        <option value="Y">Yes</option>
+                        <option value="N">No</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="FSAG_SERVICE_STATUS" class="text-success" style="font-weight:bold">Service Status</label>
+                    <select id="FSAG_SERVICE_STATUS" name="FSAG_SERVICE_STATUS" class="form-select">
+                        <option value="">--Select--</option>
+                        <option value="Y">Yes</option>
+                        <option value="N">No</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="FSHL_HIERCL_LEVEL_ID" class="text-success" style="font-weight:bold">Hierarchical Channels</label>
+                    <select id="FSHL_HIERCL_LEVEL_ID" name="FSHL_HIERCL_LEVEL_ID" class="form-select">
+                        <option value="">--Select--</option>
+                        <option value="1">Agent</option>
+                        <option value="2">Company</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="FSAG_CHNLS_FSCD_DID" class="text-success" style="font-weight:bold">Level ID</label>
+                    <select id="FSAG_CHNLS_FSCD_DID" name="FSAG_CHNLS_FSCD_DID" class="form-select">
+                        <option value="">--Select--</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="FSAG_SALARIED_YN" class="text-success" style="font-weight:bold">Salaried </label>
+                    <select id="FSAG_SALARIED_YN" name="FSAG_SALARIED_YN" class="form-select">
+                        <option value="">--Select--</option>
+                        <option value="Y">Yes</option>
+                        <option value="N">No</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="FSAG_STAR_RATED_YN" class="text-success" style="font-weight:bold">Star Rated </label>
+                    <select id="FSAG_STAR_RATED_YN" name="FSAG_STAR_RATED_YN" class="form-select">
+                        <option value="">--Select--</option>
+                        <option value="Y">Yes</option>
+                        <option value="N">No</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="FSAG_STATUS" class="text-success" style="font-weight:bold">Status</label>
+                    <select id="FSAG_STATUS" name="FSAG_STATUS" class="form-select">
+                        <option value="">--Select--</option>
+                        <option value="Y">Active</option>
+                        <option value="N">Un-Active</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="fsag_date_of_confirm" class="text-success" style="font-weight:bold">Date of Confirm</label>
+                    <input type="date" id="fsag_date_of_confirm" name="fsag_date_of_confirm" placeholder="Leaving Date" class="datefield form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label for="fsbk_bank_id" class="text-success" style="font-weight:bold">Bank Name </label>
+                    @*<input id="fsbk_bank_id" name="fsbk_bank_id" placeholder="Bank Name" class="form-control"  type="text" />*@
+                    <select id="fsbk_bank_id" name="fsbk_bank_id" class="form-select">
+                        <option value="">--Select--</option>
+                        <option value="1">Habib Bank</option>
+                        <option value="2">Bank Islami</option>
+                        <option value="3">Meezan Banl</option>
+                        <option value="4">Samba Bank</option>
+                        <option value="5">Bank Al Habib</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="fsag_ba_account_no" class="text-success" style="font-weight:bold">Account No</label>
+                    <input id="fsag_ba_account_no" name="fsag_ba_account_no" placeholder="Account No" class="form-control" type="text" />
+                </div>
+            </div>
+            <div class="row mt-1">
+                <div class="col-md-3">
+                    <label for="fsag_direct_agent_yn" class="text-success" style="font-weight:bold">Direct Agent</label>
+                    <select id="fsag_direct_agent_yn" name="fsag_direct_agent_yn" class="form-select">
+                        <option value="">--Select--</option>
+                        <option value="Y">Yes</option>
+                        <option value="N">No</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="fsag_target_salary" class="text-success" style="font-weight:bold">Target Salary</label>
+                    <input id="fsag_target_salary" name="fsag_target_salary" class="form-control" placeholder="Target Salary">
+                </div>
+                <div class="col-md-3">
+                    <label for="fsag_probation_period" class="text-success" style="font-weight:bold">Probation Period</label>
+                    <input id="fsag_probation_period" name="fsag_probation_period" class="form-control" placeholder="Probation Period">
+                </div>
+                <div class="col-md-3">
+                    <label for="fsag_remarks" class="text-success" style="font-weight:bold">Remarks</label>
+                    <input id="fsag_remarks" name="fsag_remarks" class="form-control" placeholder="Remarks" type="text">
+                </div>
+            </div>
+            <div class="row mt-1">
+                <div class="col-md-3">
+                    <label for="fsag_immedt_supvsr_code" class="text-success" style="font-weight:bold">Supervisor Code</label>
+                    <select id="fsag_immedt_supvsr_code" name="fsag_immedt_supvsr_code" class="form-select">
+                        <option>--Select--</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <label for="fsag" class="text-white" style="font-weight:bold"></label>
+
+            </div>
+
+            <div class="row">
+                <div class="mb-2 mt-2 col-md-5">
+                    <button class="btn btn-success" style="margin-left:01%; width:20%; text-align: left;" type="submit"
+                            id="processCustomer" name="processCustomer">
+                        Submit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="spinner-box" hidden>
+        <img src="/Assets/img/photos/loader_img.gif" id="loaderImage" />
+        <div id="loader_text" class="text-white pt-2 text-center">Please wait...While Agent Data is being Loaded!</div>
+    </div>
+
+    <div id="saving_spinner" hidden>
+        <img src="/Assets/img/photos/loader_img.gif" id="loaderImage" />
+        <div id="loader_text" class="text-white pt-2 text-center">Please wait...While Agent is being Registered!</div>
+    </div>
+</form>

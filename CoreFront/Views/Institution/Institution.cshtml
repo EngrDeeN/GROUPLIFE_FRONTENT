@@ -1,0 +1,1801 @@
+﻿@model CoreFront.Models.Institution
+@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Configuration.Json
+@inject IConfiguration Configuration
+@{
+    ViewData["Title"] = "Institution Form";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.8/css/intlTelInput.css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.8/js/intlTelInput-jquery.min.js"></script>
+<link rel="stylesheet" href="https://rawgithub.com/indrimuska/jquery-editable-select/master/dist/jquery-editable-select.min.css">
+<script type="text/javascript" src="https://github.com/indrimuska/jquery-editable-select/blob/master/src/jquery-editable-select.js"></script>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#Institution_Name').select2();
+    })
+</script>
+
+@*<script>
+        new Choices(document.querySelector(".choices-single"));
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'UA-120946860-10', { 'anonymize_ip': true });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function (event) {
+            setTimeout(function () {
+                if (localStorage.getItem('popState') !== 'shown') {
+                    window.notyf.open({
+                        type: "success",
+                        // message: "Get access to all 500+ components and 45+ pages with AdminKit PRO. <u><a class=\"text-white\" href=\"https://adminkit.io/pricing\" target=\"_blank\">More info</a></u> 🚀",
+                        duration: 10000,
+                        ripple: true,
+                        dismissible: false,
+                        position: {
+                            x: "left",
+                            y: "bottom"
+                        }
+                    });
+
+                    localStorage.setItem('popState', 'shown');
+                }
+            }, 15000);
+        });
+    </script>*@
+<script>
+    const app_host_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_IP").Value);
+    const api_port_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_PNO").Value);
+    const Result_API = (app_host_API + ":" + api_port_API);
+
+    const app_host_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_IP").Value);
+    const api_port_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_PNO").Value);
+    const Result_Front = (app_host_Front + ":" + api_port_Front);
+
+    //Result_API = "localhost:62252";
+    //Result_Front = "localhost:16948";
+</script>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        var next = 0;
+
+        $("#btnDirInfo").click(function (e) {
+            e.preventDefault();
+            if ($("#TableDirInfo tbody").length == 0) {
+                $("#TableDirInfo").append("<tbody></tbody>");
+            }
+            next += 1;
+            var totalRowCount = 0;
+            var rowCount = 0;
+            var table = document.getElementById("TableDirInfo");
+            var rows = table.getElementsByTagName("tr")
+            for (var i = 0; i < rows.length; i++) {
+                totalRowCount++;
+                if (rows[i].getElementsByTagName("td").length > 0) {
+                    rowCount++;
+                }
+            }
+            if (totalRowCount > 0) {
+                next = totalRowCount + 1;
+            }
+            if (i == 0) {
+                $("#TableDirInfo tbody").append("<tr><td class='text-white' style='font-weight:bold'>Full Name:</td>" +
+                    "<td class='text-white' style='font-weight:bold'>Designation:</td>" +
+                    "<td class='text-white' style='font-weight:bold'>Email:</td > " +
+                    "<td class='text-white' style='font-weight:bold'>CNIC #:</td > " +
+                    "<td class='text-white' style='font-weight:bold'>CNIC Issuance:</td > " +
+                    "<td class='text-white' style='font-weight:bold'>CNIC Expiry:</td>" +
+                    "<td class='text-white' style='font-weight:bold'>Delete Info:</td>" +
+                    "</tr>");
+
+            }
+            // Append product to the table
+            $("#TableDirInfo tbody").append("<tr>" +
+                "<td><input class='form-control' style='width:200px;' placeholder='Full Name'    maxlength='25' name='FSIO_OWNER_NAME' id='FSIO_OWNER_NAME" + next + "'></td>" +
+                "<td><input class='form-control' style='width:200px;' placeholder='Designation'  maxlength='25' name='FSIO_OWNER_DESIGN' id='FSIO_OWNER_DESIGN" + next + "'></td>" +
+                "<td><input class='form-control' style='width:210px;' placeholder='Email'  maxlength='30' name='FSIO_OWNER_EMAIL' id='FSIO_OWNER_EMAIL" + next + "'></td>" +
+                "<td><input class='form-control' style='width:145px;' placeholder='CNIC #'  maxlength='13' name='FSIO_OWNER_CNIC' id='FSIO_OWNER_CNIC" + next + "'></td>" +
+                "<td><input class='form-control' style='width:120px;' placeholder='MM/DD/YYYY'  maxlength='10' name='FSIO_OCNIC_ISSUDATE' id='FSIO_OCNIC_ISSUDATE" + next + "'></td>" +
+                "<td><input class='form-control' style='width:120px;' placeholder='MM/DD/YYYY' maxlength='10' name='FSIO_OCNIC_EXPRDATE' id='FSIO_OCNIC_EXPRDATE" + next + "'></td>" +
+                //"<td><img class='static_trash' center id ='Ins_static_btn" + next + "' src='/Assets/img/photos/trashbin.png' alt='' width='50' height='55' style='color:white'/></td >" +
+                "<td ><button type='button' class='form-control' height ='50px;' width='60px;' name='BtnDirInfoDelete' id='BtnDirInfoDelete" + next + "' > <i class='fa fa-trash'></i> </button>" +
+                "</tr>");
+        });
+    });
+
+    $(document).ready(function () {
+        $(document).on('click', 'button.form-control', function () {
+            alert("Do you want to remove table Row");
+            $(this).closest('tr').remove();
+            return false;
+        });
+    });
+
+
+    $(function () {
+        var code = "+92"; // Assigning value from model.
+        $('#FSIM_MOBILE_NO1').val(code);
+        $('#FSIM_MOBILE_NO1').intlTelInput({
+            autoHideDialCode: true,
+            autoPlaceholder: "ON",
+            dropdownContainer: document.body,
+            formatOnDisplay: true,
+            hiddenInput: "full_number",
+            initialCountry: "auto",
+            nationalMode: true,
+            placeholderNumberType: "MOBILE",
+            preferredCountries: ['US'],
+            separateDialCode: true
+
+        });
+    });
+    $(function () {
+        var code = "+92"; // Assigning value from model.
+        $('#FSIM_MOBILE_NO2').val(code);
+        $('#FSIM_MOBILE_NO2').intlTelInput({
+            autoHideDialCode: true,
+            autoPlaceholder: "ON",
+            dropdownContainer: document.body,
+            formatOnDisplay: true,
+            hiddenInput: "full_number",
+            initialCountry: "auto",
+            nationalMode: true,
+            placeholderNumberType: "MOBILE",
+            preferredCountries: ['US'],
+            separateDialCode: true
+        });
+    });
+    $(function () {
+        var code = "+92"; // Assigning value from model.
+        $('#FSIC_CONTACT_NO1').val(code);
+        $('#FSIC_CONTACT_NO1').intlTelInput({
+            autoHideDialCode: true,
+            autoPlaceholder: "ON",
+            dropdownContainer: document.body,
+            formatOnDisplay: true,
+            hiddenInput: "full_number",
+            initialCountry: "auto",
+            nationalMode: true,
+            placeholderNumberType: "MOBILE",
+            preferredCountries: ['US'],
+            separateDialCode: true
+        });
+    });
+    $(function () {
+        var code = "+92"; // Assigning value from model.
+        $('#FSIC_CONTACT_NO2').val(code);
+        $('#FSIC_CONTACT_NO2').intlTelInput({
+            autoHideDialCode: true,
+            autoPlaceholder: "ON",
+            dropdownContainer: document.body,
+            formatOnDisplay: true,
+            hiddenInput: "full_number",
+            initialCountry: "auto",
+            nationalMode: true,
+            placeholderNumberType: "MOBILE",
+            preferredCountries: ['US'],
+            separateDialCode: true
+        });
+    });
+
+</script>
+<script type="text/javascript">
+    $(document).on('change', 'input[type=radio][name=Correspondence]', function (event) {
+
+        if (this.value == 'CorPond') {
+
+            $("#FSIA_ADDRESS12").val($("#FSIA_ADDRESS1").val());
+            $("#FSIA_ADDRESS22").val($("#FSIA_ADDRESS2").val());
+            $("#FSIA_ADDRESS32").val($("#FSIA_ADDRESS3").val());
+
+            var $options = $("#FSSC_COUNTRY_ID_AD > option").clone();
+            $('#FSSC_COUNTRY_ID_AD2').empty();
+            $('#FSSC_COUNTRY_ID_AD2').append($options);
+            $('#FSSC_COUNTRY_ID_AD2').val($('#FSSC_COUNTRY_ID_AD').val());
+
+            var $options = $("#FSSP_PROVINCE_ID_AD > option").clone();
+            $('#FSSP_PROVINCE_ID_AD2').empty();
+            $('#FSSP_PROVINCE_ID_AD2').append($options);
+            $('#FSSP_PROVINCE_ID_AD2').val($('#FSSP_PROVINCE_ID_AD').val());
+
+            var $options = $("#FSCT_CITY_ID_AD > option").clone();
+            $('#FSCT_CITY_ID_AD2').empty();
+            $('#FSCT_CITY_ID_AD2').append($options);
+            $('#FSCT_CITY_ID_AD2').val($('#FSCT_CITY_ID_AD').val());
+
+            var $options = $("#FSPS_POSTAL_ID_AD > option").clone();
+            $('#FSPS_POSTAL_ID_AD2').empty();
+            $('#FSPS_POSTAL_ID_AD2').append($options);
+            $('#FSPS_POSTAL_ID_AD2').val($('#FSPS_POSTAL_ID_AD').val());
+
+        }
+    });
+
+
+    $(document).on('change', 'input[type=radio][name=CorrespondenceBusi]', function (event) {
+
+        if (this.value == 'Busi') {
+
+            $("#FSIA_ADDRESS13").val($("#FSIA_ADDRESS1").val());
+            $("#FSIA_ADDRESS23").val($("#FSIA_ADDRESS2").val());
+            $("#FSIA_ADDRESS33").val($("#FSIA_ADDRESS3").val());
+
+            var $options = $("#FSSC_COUNTRY_ID_AD > option").clone();
+            $('#FSSC_COUNTRY_ID_AD3').empty();
+            $('#FSSC_COUNTRY_ID_AD3').append($options);
+            $('#FSSC_COUNTRY_ID_AD3').val($('#FSSC_COUNTRY_ID_AD').val());
+
+            var $options = $("#FSSP_PROVINCE_ID_AD > option").clone();
+            $('#FSSP_PROVINCE_ID_AD3').empty();
+            $('#FSSP_PROVINCE_ID_AD3').append($options);
+            $('#FSSP_PROVINCE_ID_AD3').val($('#FSSP_PROVINCE_ID_AD').val());
+
+            var $options = $("#FSCT_CITY_ID_AD > option").clone();
+            $('#FSCT_CITY_ID_AD3').empty();
+            $('#FSCT_CITY_ID_AD3').append($options);
+            $('#FSCT_CITY_ID_AD3').val($('#FSCT_CITY_ID_AD').val());
+
+            var $options = $("#FSPS_POSTAL_ID_AD > option").clone();
+            $('#FSPS_POSTAL_ID_AD3').empty();
+            $('#FSPS_POSTAL_ID_AD3').append($options);
+            $('#FSPS_POSTAL_ID_AD3').val($('#FSPS_POSTAL_ID_AD').val());
+
+        }
+    });
+</script>
+<script type="text/javascript">
+
+    window.setTimeout(function () {
+        $(".alert").fadeTo(500, 0).slideUp(500, function () {
+            $(this).remove();
+        });
+    }, 4000);
+
+    $(document).ready(function () {
+        $.ajax({
+            "async": true,
+            "crossDomain": true,
+            url: "http://" + Result_API + "/api/Institution/GetInstitutionTypeList",
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            datatype: JSON,
+            success: function (result) {
+                $(result).each(function () {
+                    $("#FSIT_INSTITYP_ID").append($("<option></option>").val(this.FSIT_INSTITYP_ID).html(this.FSIT_INSTITYP_DESCR));
+                });
+            },
+            error: function (data) { }
+        });
+    });
+</script>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $.ajax({
+            "async": true,
+            "crossDomain": true,
+            url: "http://" + Result_API + "/api/Institution/GetInstitutionList",
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            datatype: JSON,
+            success: function (result) {
+                $(result).each(function () {
+                    $("#Institution_Name").append($("<option></option>").val(this.FSSI_INSTITUTE_ID).html(this.FSSI_DESCRIPTION));
+                });
+            },
+            error: function (data) { }
+        });
+
+
+        $.ajax({
+            "async": true,
+            "crossDomain": true,
+            url: "http://" + Result_API + "/api/Country/GetCountryList",
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            datatype: JSON,
+            success: function (result) {
+                $(result).each(function () {
+                    $("#FSSC_COUNTRY_ID_AD").append($("<option></option>").val(this.FSSC_COUNTRY_ID).html(this.FSSC_COUNTRY_NAME));
+                });
+                $("#FSSC_COUNTRY_ID_AD").val("");
+                $("#FSSP_PROVINCE_ID_AD").val("");
+                $("#FSCT_CITY_ID_AD").val("");
+                $("#FSPS_POSTAL_ID_AD").val("");
+            },
+            error: function (data) { }
+        });
+
+        $.ajax({
+            "async": true,
+            "crossDomain": true,
+            url: "http://" + Result_API + "/api/Country/GetCountryList",
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            datatype: JSON,
+            success: function (result) {
+                $(result).each(function () {
+                    $("#FSSC_COUNTRY_ID_AD2").append($("<option></option>").val(this.FSSC_COUNTRY_ID).html(this.FSSC_COUNTRY_NAME));
+                });
+                $("#FSSC_COUNTRY_ID_AD2").val("");
+                $("#FSSP_PROVINCE_ID_AD2").val("");
+                $("#FSCT_CITY_ID_AD2").val("");
+                $("#FSPS_POSTAL_ID_AD2").val("");
+            },
+            error: function (data) { }
+        });
+
+        $.ajax({
+            "async": true,
+            "crossDomain": true,
+            url: "http://" + Result_API + "/api/Country/GetCountryList",
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            datatype: JSON,
+            success: function (result) {
+                $(result).each(function () {
+                    $("#FSSC_COUNTRY_ID_AD3").append($("<option></option>").val(this.FSSC_COUNTRY_ID).html(this.FSSC_COUNTRY_NAME));
+                });
+                $("#FSSC_COUNTRY_ID_AD3").val("");
+                $("#FSSP_PROVINCE_ID_AD3").val("");
+                $("#FSCT_CITY_ID_AD3").val("");
+                $("#FSPS_POSTAL_ID_AD3").val("");
+            },
+            error: function (data) { }
+        });
+
+    });
+
+</script>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $("#FSSC_COUNTRY_ID_AD").change(function () {
+            var countryID = $("#FSSC_COUNTRY_ID_AD").val();
+
+            $.ajax({
+                "async": true,
+                "crossDomain": true,
+                url: "http://" + Result_API + "/api/Province/GetProvinceDetailsByCont/" + countryID,
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#FSSP_PROVINCE_ID_AD").empty();
+                    $("#FSSP_PROVINCE_ID_AD").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                    $(result).each(function () {
+                        $("#FSSP_PROVINCE_ID_AD").append($("<option></option>").val(this.FSSP_PROVINCE_ID).html(this.FSSP_PROVINCE_NAME));
+                    });
+                    $("#FSSP_PROVINCE_ID_AD").val("");
+                    $("#FSCT_CITY_ID_AD").val("");
+                    $("#FSPS_POSTAL_ID_AD").val("");
+                },
+                error: function (data) { }
+            });
+        });
+
+        $("#FSSC_COUNTRY_ID_AD2").change(function () {
+            var countryID2 = $("#FSSC_COUNTRY_ID_AD2").val();
+
+            $.ajax({
+                "async": true,
+                "crossDomain": true,
+                url: "http://" + Result_API + "/api/Province/GetProvinceDetailsByCont/" + countryID2,
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#FSSP_PROVINCE_ID_AD2").empty();
+                    $("#FSSP_PROVINCE_ID_AD2").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                    $(result).each(function () {
+                        $("#FSSP_PROVINCE_ID_AD2").append($("<option></option>").val(this.FSSP_PROVINCE_ID).html(this.FSSP_PROVINCE_NAME));
+                    });
+                    $("#FSSP_PROVINCE_ID_AD2").val("");
+                    $("#FSCT_CITY_ID_AD2").val("");
+                    $("#FSPS_POSTAL_ID_AD2").val("");
+                },
+                error: function (data) { }
+            });
+        });
+
+        $("#FSSC_COUNTRY_ID_AD3").change(function () {
+            var countryID3 = $("#FSSC_COUNTRY_ID_AD3").val();
+
+            $.ajax({
+                "async": true,
+                "crossDomain": true,
+                url: "http://" + Result_API + "/api/Province/GetProvinceDetailsByCont/" + countryID3,
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#FSSP_PROVINCE_ID_AD3").empty();
+                    $("#FSSP_PROVINCE_ID_AD3").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                    $(result).each(function () {
+                        $("#FSSP_PROVINCE_ID_AD3").append($("<option></option>").val(this.FSSP_PROVINCE_ID).html(this.FSSP_PROVINCE_NAME));
+                    });
+                    $("#FSSP_PROVINCE_ID_AD3").val("");
+                    $("#FSCT_CITY_ID_AD3").val("");
+                    $("#FSPS_POSTAL_ID_AD3").val("");
+                },
+                error: function (data) { }
+            });
+        });
+    });
+
+</script>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $("#FSSP_PROVINCE_ID_AD").change(function () {
+            var provinceID = $("#FSSP_PROVINCE_ID_AD").val();
+            var countryID = $("#FSSC_COUNTRY_ID_AD").val();
+
+            $.ajax({
+                "async": true,
+                "crossDomain": true,
+                url: "http://" + Result_API + "/api/City/GetCityDetailsByProvCont/" + provinceID + "/" + countryID,
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#FSCT_CITY_ID_AD").empty();
+                    $("#FSCT_CITY_ID_AD").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                    $(result).each(function () {
+                        $("#FSCT_CITY_ID_AD").append($("<option></option>").val(this.FSCT_CITY_ID).html(this.FSCT_CITY_NAME));
+                    });
+                    $("#FSCT_CITY_ID_AD").val("");
+                    $("#FSPS_POSTAL_ID_AD").val("");
+                },
+                error: function (data) { }
+            });
+        });
+
+        $("#FSSP_PROVINCE_ID_AD2").change(function () {
+            var provinceID2 = $("#FSSP_PROVINCE_ID_AD2").val();
+            var countryID2 = $("#FSSC_COUNTRY_ID_AD2").val();
+
+            $.ajax({
+                "async": true,
+                "crossDomain": true,
+                url: "http://" + Result_API + "/api/City/GetCityDetailsByProvCont/" + provinceID2 + "/" + countryID2,
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#FSCT_CITY_ID_AD2").empty();
+                    $("#FSCT_CITY_ID_AD2").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                    $(result).each(function () {
+                        $("#FSCT_CITY_ID_AD2").append($("<option></option>").val(this.FSCT_CITY_ID).html(this.FSCT_CITY_NAME));
+                    });
+                    $("#FSCT_CITY_ID_AD2").val("");
+                    $("#FSPS_POSTAL_ID_AD2").val("");
+                },
+                error: function (data) { }
+            });
+        });
+
+        $("#FSSP_PROVINCE_ID_AD3").change(function () {
+            var provinceID3 = $("#FSSP_PROVINCE_ID_AD3").val();
+            var countryID3 = $("#FSSC_COUNTRY_ID_AD3").val();
+
+            $.ajax({
+                "async": true,
+                "crossDomain": true,
+                url: "http://" + Result_API + "/api/City/GetCityDetailsByProvCont/" + provinceID3 + "/" + countryID3,
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#FSCT_CITY_ID_AD3").empty();
+                    $("#FSCT_CITY_ID_AD3").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                    $(result).each(function () {
+                        $("#FSCT_CITY_ID_AD3").append($("<option></option>").val(this.FSCT_CITY_ID).html(this.FSCT_CITY_NAME));
+                    });
+                    $("#FSCT_CITY_ID_AD3").val("");
+                    $("#FSPS_POSTAL_ID_AD3").val("");
+                },
+                error: function (data) { }
+            });
+        });
+    });
+
+</script>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $("#FSCT_CITY_ID_AD").change(function () {
+            var cityID = $("#FSCT_CITY_ID_AD").val();
+            var provinceID = $("#FSSP_PROVINCE_ID_AD").val();
+            var countryID = $("#FSSC_COUNTRY_ID_AD").val();
+
+            $.ajax({
+                "async": true,
+                "crossDomain": true,
+                url: "http://" + Result_API + "/api/PostalCodes/GetPostCodeDtlByCtyProvCont/" + cityID + "/" + provinceID + "/" + countryID,
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#FSPS_POSTAL_ID_AD").empty();
+                    $("#FSPS_POSTAL_ID_AD").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                    $(result).each(function () {
+                        $("#FSPS_POSTAL_ID_AD").append($("<option></option>").val(this.FSPS_POSTAL_ID).html(this.FSPS_POSTAL_CODE + "-" + this.FSPS_POSTAL_DESCRIPTION));
+                    });
+                    $("#FSPS_POSTAL_ID_AD").val("");
+                },
+                error: function (data) { }
+            });
+        });
+
+        $("#FSCT_CITY_ID_AD2").change(function () {
+            var cityID2 = $("#FSCT_CITY_ID_AD2").val();
+            var provinceID2 = $("#FSSP_PROVINCE_ID_AD2").val();
+            var countryID2 = $("#FSSC_COUNTRY_ID_AD2").val();
+
+            $.ajax({
+                "async": true,
+                "crossDomain": true,
+                url: "http://" + Result_API + "/api/PostalCodes/GetPostCodeDtlByCtyProvCont/" + cityID2 + "/" + provinceID2 + "/" + countryID2,
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#FSPS_POSTAL_ID_AD2").empty();
+                    $("#FSPS_POSTAL_ID_AD2").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                    $(result).each(function () {
+                        $("#FSPS_POSTAL_ID_AD2").append($("<option></option>").val(this.FSPS_POSTAL_ID).html(this.FSPS_POSTAL_CODE + "-" + this.FSPS_POSTAL_DESCRIPTION));
+                    });
+                    $("#FSPS_POSTAL_ID_AD2").val("");
+                },
+                error: function (data) { }
+            });
+        });
+
+        $("#FSCT_CITY_ID_AD3").change(function () {
+            var cityID3 = $("#FSCT_CITY_ID_AD3").val();
+            var provinceID3 = $("#FSSP_PROVINCE_ID_AD3").val();
+            var countryID3 = $("#FSSC_COUNTRY_ID_AD3").val();
+
+            $.ajax({
+                "async": true,
+                "crossDomain": true,
+                url: "http://" + Result_API + "/api/PostalCodes/GetPostCodeDtlByCtyProvCont/" + cityID3 + "/" + provinceID3 + "/" + countryID3,
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#FSPS_POSTAL_ID_AD3").empty();
+                    $("#FSPS_POSTAL_ID_AD3").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                    $(result).each(function () {
+                        $("#FSPS_POSTAL_ID_AD3").append($("<option></option>").val(this.FSPS_POSTAL_ID).html(this.FSPS_POSTAL_CODE + "-" + this.FSPS_POSTAL_DESCRIPTION));
+                    });
+                    $("#FSPS_POSTAL_ID_AD3").val("");
+                },
+                error: function (data) { }
+            });
+        });
+
+    });
+
+</script>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $("#FSPS_POSTAL_ID_AD").change(function () {
+            var postalCodeID = $("#FSPS_POSTAL_ID_AD").val();
+
+            $.ajax({
+                "async": true,
+                "crossDomain": true,
+                url: "http://" + Result_API + "/api/AreaOfPostal/GetAreaOfPostalDtlByPostalCode/" + postalCodeID,
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#FSAP_AREA_ID_AD").empty();
+                    $("#FSAP_AREA_ID_AD").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                    $(result).each(function () {
+                        $("#FSAP_AREA_ID_AD").append($("<option></option>").val(this.FSAP_AREA_ID).html(this.FSAP_AREA_DESCRIPTION));
+                    });
+                },
+                error: function (data) { }
+            });
+        });
+
+        $("#FSPS_POSTAL_ID_AD2").change(function () {
+            var postalCodeID2 = $("#FSPS_POSTAL_ID_AD2").val();
+
+            $.ajax({
+                "async": true,
+                "crossDomain": true,
+                url: "http://" + Result_API + "/api/AreaOfPostal/GetAreaOfPostalDtlByPostalCode/" + postalCodeID2,
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#FSAP_AREA_ID_AD2").empty();
+                    $("#FSAP_AREA_ID_AD2").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                    $(result).each(function () {
+                        $("#FSAP_AREA_ID_AD2").append($("<option></option>").val(this.FSAP_AREA_ID).html(this.FSAP_AREA_DESCRIPTION));
+                    });
+                },
+                error: function (data) { }
+            });
+        });
+
+        $("#FSPS_POSTAL_ID_AD3").change(function () {
+            var postalCodeID3 = $("#FSPS_POSTAL_ID_AD3").val();
+
+            $.ajax({
+                "async": true,
+                "crossDomain": true,
+                url: "http://" + Result_API + "/api/AreaOfPostal/GetAreaOfPostalDtlByPostalCode/" + postalCodeID3,
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: JSON,
+                success: function (result) {
+                    $("#FSAP_AREA_ID_AD3").empty();
+                    $("#FSAP_AREA_ID_AD3").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                    $(result).each(function () {
+                        $("#FSAP_AREA_ID_AD3").append($("<option></option>").val(this.FSAP_AREA_ID).html(this.FSAP_AREA_DESCRIPTION));
+                    });
+                },
+                error: function (data) { }
+            });
+        });
+    });
+
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#btnInstSearch').click(function (e) {
+            e.preventDefault();
+            //var Institution_Name = $("#Institution_Name").val();
+
+            var Institution_Name = $("#Institution_Name option:selected").text();
+            var INSTITUTIONREGISTNO = $("#InstitutionRegistration").val();
+
+            if (INSTITUTIONREGISTNO == "") {
+                INSTITUTIONREGISTNO = "null";
+            }
+
+            //alert( Institution_Name + ' ' + INSTITUTIONREGISTNO);
+            var baseURL = "http://" + Result_API + "/api/Institution/SearchInstitution/" + INSTITUTIONREGISTNO + "/" + Institution_Name;
+            $(".spinner-box").removeAttr("hidden", true);
+            setTimeout(function () {
+                $.ajax(baseURL,
+                    {
+                        "async": true,
+                        "crossDomain": true,
+                        type: "GET",
+                        cache: false,
+                        contentType: "application/json; charset=utf-8",
+                        datatype: JSON,
+                        success: function (data, status, xhr) {
+                            $(data).each(function () {
+                                if (data) {
+
+                                    var REGISTRATION_DATE = new Date(this.FSSI_REGISTRATION_DATE);
+                                    var day = ('0' + REGISTRATION_DATE.getDate()).slice(-2);
+                                    var month = ('0' + REGISTRATION_DATE.getMonth()).slice(-2);
+                                    month = Number(month) + 1;
+                                    if (month < 10)
+                                        month = '0' + month.toString();
+
+                                    var FSSI_REGISTRATION_DATE = REGISTRATION_DATE.getFullYear() + "-" + (month) + "-" + (day);
+
+                                    var EFFECT_FROM_DATE = new Date(this.FSSI_EFFECT_FROM_DATE);
+                                    var day = ('0' + EFFECT_FROM_DATE.getDate()).slice(-2);
+                                    var month = ('0' + EFFECT_FROM_DATE.getMonth()).slice(-2);
+                                    month = Number(month) + 1;
+                                    if (month < 10)
+                                        month = '0' + month.toString();
+                                    var FSSI_EFFECT_FROM_DATE = EFFECT_FROM_DATE.getFullYear() + "-" + (month) + "-" + (day);
+
+
+                                    var EFFECT_TO_DATE = new Date(this.FSSI_EFFECT_TO_DATE);
+                                    var day = ('0' + EFFECT_TO_DATE.getDate()).slice(-2);
+                                    var month = ('0' + EFFECT_TO_DATE.getMonth()).slice(-2);
+                                    month = Number(month) + 1;
+                                    if (month < 10)
+                                        month = '0' + month.toString();
+                                    var FSSI_EFFECT_TO_DATE = EFFECT_TO_DATE.getFullYear() + "-" + (month) + "-" + (day);
+
+                                    $("#FSSI_INSTITUTE_ID").val(this.FSSI_INSTITUTE_ID);
+                                    $("#FSIT_INSTITYP_ID").val(this.FSIT_INSTITYP_ID);
+                                    $("#FSSI_CATEGORY_CODE").val(this.FSSI_CATEGORY_CODE);
+                                    $("#FSSI_OCCUP_INDSTRY_TYPE").val(this.FSSI_OCCUP_INDSTRY_TYPE);
+                                    $("#FSSI_COMP_SECTOR_TYPE").val(this.FSSI_COMP_SECTOR_TYPE);
+                                    $("#FSSI_SHORT_CODE").val(this.FSSI_SHORT_CODE);
+                                    $("#FSSI_DESCRIPTION").val(this.FSSI_DESCRIPTION);
+                                    $("#FSSI_SHORT_DESCRIPTION").val(this.FSSI_SHORT_DESCRIPTION);
+                                    $("#FSSI_WEB_ADDRESS").val(this.FSSI_WEB_ADDRESS);
+                                    $("#FSSI_REGISTRATION_NO").val(this.FSSI_REGISTRATION_NO);
+                                    $("#FSSI_REGISTRATION_DATE").val(FSSI_REGISTRATION_DATE);
+                                    $("#FSSI_NTN_NO").val(this.FSSI_NTN_NO);
+                                    $("#FSSI_STRN_NO").val(this.FSSI_STRN_NO);
+                                    $("#FSSI_EFFECT_FROM_DATE").val(FSSI_EFFECT_FROM_DATE);
+                                    $("#FSSI_EFFECT_TO_DATE").val(FSSI_EFFECT_TO_DATE);
+                                    $("#FSSI_BANK_ROLE").val(this.FSSI_BANK_ROLE);
+                                    $("#FSSI_STATUS").val(this.FSSI_STATUS);
+
+                                    var intitIdValue = $("#FSSI_INSTITUTE_ID").val();
+
+                                    //$.ajax({
+                                    //    url: "http://" + Result_API + "/api/Institution/GetInstitOwnerInfo/" + intitIdValue,
+                                    //    type: "GET",
+                                    //    contentType: "application/json; charset=utf-8",
+                                    //    datatype: JSON,
+                                    //    success: function (result) {
+                                    //        $(result).each(function () {
+                                    //            $("#FSIO_OWNER_NAME").val(this.FSIO_OWNER_NAME);
+                                    //            $("#FSIO_OWNER_DESIGN").val(this.FSIO_OWNER_DESIGN);
+                                    //            $("#FSIO_OWNER_EMAIL").val(this.FSIO_OWNER_EMAIL);
+                                    //        });
+                                    //    },
+                                    //    error: function (data) { }
+                                    //});
+
+
+                                    var next = 1;
+                                    /*Creating Ajax call for getting bank details of customer*/
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        url: "http://" + Result_API + "/api/Institution/GetInstitOwnerInfo/" + intitIdValue,
+                                        type: "GET",
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        timeout: 5000,
+                                        success: function (data) {
+                                            $('#TableDirInfo tbody').empty();
+                                            if ($("#TableDirInfo tbody").length == 0) {
+                                                $("#TableDirInfo").append("<tbody></tbody>");
+                                            }
+                                            if (data.length != 0) {
+
+                                                if (data.length != 0) {
+                                                    $("#TableDirInfo tbody").append("<tr><td class='text-white' style='font-weight:bold'>Full Name:</td>" +
+                                                        "<td class='text-white' style='font-weight:bold'>Designation:</td>" +
+                                                        "<td class='text-white' style='font-weight:bold'>Email:</td > " +
+                                                        "<td class='text-white' style='font-weight:bold'>CNIC #:</td > " +
+                                                        "<td class='text-white' style='font-weight:bold'>CNIC Issuance:</td > " +
+                                                        "<td class='text-white' style='font-weight:bold'>CNIC Expiry:</td>" +
+                                                        "<td class='text-white' style='font-weight:bold'> </td>" +
+                                                        "</tr>");
+                                                }
+                                                if (data.length != null) {
+                                                    for (var z = 0; z < data.length; z++) {
+                                                        //var FSIO_OCNIC_ISSUDATE = new Date(data[z].FSIO_OCNIC_ISSUDATE).toISOString().slice(0, 10);
+                                                        //var FSIO_OCNIC_EXPRDATE = new Date(data[z].FSIO_OCNIC_EXPRDATE).toISOString().slice(0, 10);
+                                                        // Append product to the table
+
+                                                        var OCNIC_ISSUDATE = new Date(data[z].FSIO_OCNIC_ISSUDATE);
+                                                        var day = ('0' + OCNIC_ISSUDATE.getDate()).slice(-2);
+                                                        var month = ('0' + OCNIC_ISSUDATE.getMonth()).slice(-2);
+                                                        month = Number(month) + 1;
+                                                        if (month < 10)
+                                                            month = '0' + month.toString();
+                                                        var FSIO_OCNIC_ISSUDATE = (day) + "/" + (month) + "/" + OCNIC_ISSUDATE.getFullYear();
+
+
+                                                        var OCNIC_EXPRDATE = new Date(data[z].FSIO_OCNIC_EXPRDATE);
+                                                        var day = ('0' + OCNIC_EXPRDATE.getDate()).slice(-2);
+                                                        var month = ('0' + OCNIC_EXPRDATE.getMonth()).slice(-2);
+                                                        month = Number(month) + 1;
+                                                        if (month < 10)
+                                                            month = '0' + month.toString();
+                                                        var FSIO_OCNIC_EXPRDATE = (day) + "/" + (month) + "/" + OCNIC_EXPRDATE.getFullYear(); //OCNIC_EXPRDATE.getFullYear() + "-" + (month) + "-" + (day);
+
+                                                        $("#TableDirInfo tbody").append("<tr>" +
+                                                            "<td><input class='form-control' style='width:200px;' placeholder='Full Name'    maxlength='25' name='FSIO_OWNER_NAME' id='FSIO_OWNER_NAME" + next + "' value = '" + data[z].FSIO_OWNER_NAME + "'></td>" +
+                                                            "<td><input class='form-control' style='width:200px;' placeholder='Designation'  maxlength='25' name='FSIO_OWNER_DESIGN' id='FSIO_OWNER_DESIGN" + next + "' value = '" + data[z].FSIO_OWNER_DESIGN + "'></td>" +
+                                                            "<td><input class='form-control' style='width:210px;' placeholder='Email'  maxlength='30' name='FSIO_OWNER_EMAIL' id='FSIO_OWNER_EMAIL" + next + "' value = '" + data[z].FSIO_OWNER_EMAIL + "'></td>" +
+                                                            "<td><input class='form-control' style='width:145px;' placeholder='CNIC #'  maxlength='13' name='FSIO_OWNER_CNIC' id='FSIO_OWNER_CNIC" + next + "'  value = '" + data[z].FSIO_OWNER_CNIC + "'></td>" +
+                                                            "<td><input class='form-control' style='width:110px;' placeholder='CNIC Issuance'  maxlength='10' name='FSIO_OCNIC_ISSUDATE' id='FSIO_OCNIC_ISSUDATE" + next + "' ></td>" +
+                                                            "<td><input class='form-control' style='width:110px;' placeholder='CNIC Expiry' maxlength='10'  name='FSIO_OCNIC_EXPRDATE' id='FSIO_OCNIC_EXPRDATE" + next + "' ></td>" +
+                                                            //"<td><img class='static_trash' center id ='Ins_static_btn" + next + "' src='/Assets/img/photos/trashbin.png' alt='' width='50' height='55' style='color:white'/></td >" +
+                                                            "<td ><button type='button' class='form-control' height ='50px;' width='60px;' name='BtnDirInfoDelete' id='BtnDirInfoDelete" + next + "' > <i class='fa fa-trash'></i> </button>" +
+                                                            "</tr>");
+                                                        $("#FSIO_OCNIC_ISSUDATE" + next).val(FSIO_OCNIC_ISSUDATE);
+                                                        $("#FSIO_OCNIC_EXPRDATE" + next).val(FSIO_OCNIC_EXPRDATE);
+                                                        next += 1;
+
+                                                        //$("#TableDirInfo tbody").append("<tr>" +
+                                                        //    "<td><input class='form-control' style = 'width:100%;' placeholder='Account Holdar Name'  maxlength='25' name='FSCB_ACCOUNT_TITLE' id='FSCB_ACCOUNT_TITLE" + next_ + "' value = '" + data[z].FSCB_ACCOUNT_TITLE + "'></td>" +
+                                                        //    "<td><input class='form-control' style = 'width:100%;' placeholder='Bank Name'  maxlength='25' name='FSBK_BANK_NAME' id='FSBK_BANK_NAME" + next_ + "' value = '" + data[z].FSBK_BANK_NAME + "'></td>" +
+                                                        //    "<td><input class='form-control' style = 'width:100%;' placeholder='Branch Name'  maxlength='25' name='FSCB_BRANCH_NAME' id='FSCB_BRANCH_NAME" + next_ + "' value = '" + data[z].FSCB_BRANCH_NAME + "'></td>" +
+                                                        //    "<td><input class='form-control' style = 'width:100%;' placeholder='Account Number'  maxlength='25' name='FSCB_ACCOUNT_NO' id='FSCB_ACCOUNT_NO" + next_ + "' value = '" + data[z].FSCB_ACCOUNT_NO + "'></td>" +
+                                                        //    "<td><select class='form-select' style = 'width:100%;' name='FSCB_ACCOUNT_TYPE' id='FSCB_ACCOUNT_TYPE" + next_ + "'><option>--Select--</option><option value='1'>Saving</option> <option value='2'>Current</option></select>" +
+                                                        //    "<td><select class='form-select' style = 'width:100%;' name='FSCB_ACCOUNT_CATGRY' id='FSCB_ACCOUNT_CATGRY" + next_ + "'><option>--Select--</option><option value='1'>Claim</option> <option value='2'>Second</option></select>" +
+                                                        //    "<td><button type='button' class='form-control' style='width:100%;'  name='BtnBankDelete' id='BtnBankDelete" + next_ + "'>X</button>" +
+                                                        //    "<input class='form-control' style='width:10%;' hidden='hidden' name='FSCB_SERIAL_NO' id='FSCB_SERIAL_NO" + next_ + "' value = '" + data[z].FSCB_SERIAL_NO + "'></td>" +
+                                                        //    "</tr>");
+
+
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        error: function (data) { }
+                                    });
+
+
+                                    var addressType = 'P';
+
+                                    /*Block for Permanent Address fetching*/
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        url: "http://" + Result_API + "/api/Institution/GetInstitAddressDetails/" + intitIdValue + "/" + addressType,
+                                        type: "GET",
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        success: function (result) {
+                                            $(result).each(function () {
+
+                                                $("#FSSC_COUNTRY_ID_AD").val(this.FSSC_COUNTRY_ID);
+                                                var txtContryID = this.FSSC_COUNTRY_ID;
+                                                var txtProvID = this.FSSP_PROVINCE_ID;
+                                                var txtCityID = this.FSCT_CITY_ID;
+                                                var txtPostCodID = this.FSPS_POSTAL_ID;
+
+                                                /*Creating Ajax call for populating the related provinces and assignments*/
+                                                $.ajax({
+                                                    "async": true,
+                                                    "crossDomain": true,
+                                                    url: "http://" + Result_API + "/api/Province/GetProvinceDetailsByCont/" + txtContryID,
+                                                    type: "GET",
+                                                    contentType: "application/json; charset=utf-8",
+                                                    datatype: JSON,
+                                                    success: function (result) {
+                                                        $("#FSSP_PROVINCE_ID_AD").empty();
+                                                        $("#FSSP_PROVINCE_ID_AD").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                                                        $(result).each(function () {
+                                                            $("#FSSP_PROVINCE_ID_AD").append($("<option></option>").val(this.FSSP_PROVINCE_ID).html(this.FSSP_PROVINCE_NAME));
+                                                        });
+                                                        $("#FSSP_PROVINCE_ID_AD").val(txtProvID);
+                                                    },
+                                                    error: function (data) { }
+                                                });
+
+                                                /*Creating Ajax call for populating the related cities and assignments*/
+                                                $.ajax({
+                                                    "async": true,
+                                                    "crossDomain": true,
+                                                    url: "http://" + Result_API + "/api/City/GetCityDetailsByProvCont/" + txtProvID + "/" + txtContryID,
+                                                    type: "GET",
+                                                    contentType: "application/json; charset=utf-8",
+                                                    datatype: JSON,
+                                                    success: function (result) {
+                                                        $("#FSCT_CITY_ID_AD").empty();
+                                                        $("#FSCT_CITY_ID_AD").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                                                        $(result).each(function () {
+                                                            $("#FSCT_CITY_ID_AD").append($("<option></option>").val(this.FSCT_CITY_ID).html(this.FSCT_CITY_NAME));
+                                                        });
+                                                        $("#FSCT_CITY_ID_AD").val(txtCityID);
+                                                    },
+                                                    error: function (data) { }
+                                                });
+
+                                                /*Creating Ajax call for populating the related postal codes and assignments*/
+                                                $.ajax({
+                                                    "async": true,
+                                                    "crossDomain": true,
+                                                    url: "http://" + Result_API + "/api/PostalCodes/GetPostCodeDtlByCtyProvCont/" + txtCityID + "/" + txtProvID + "/" + txtContryID,
+                                                    type: "GET",
+                                                    contentType: "application/json; charset=utf-8",
+                                                    datatype: JSON,
+                                                    success: function (result) {
+                                                        $("#FSPS_POSTAL_ID_AD").empty();
+                                                        $("#FSPS_POSTAL_ID_AD").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                                                        $(result).each(function () {
+                                                            $("#FSPS_POSTAL_ID_AD").append($("<option></option>").val(this.FSPS_POSTAL_ID).html(this.FSPS_POSTAL_CODE + "-" + this.FSPS_POSTAL_DESCRIPTION));
+                                                        });
+                                                        $("#FSPS_POSTAL_ID_AD").val(txtPostCodID);
+                                                    },
+                                                    error: function (data) { }
+                                                });
+
+                                                $("#FSIA_ADDRESS1").val(this.FSIA_ADDRESS1);
+                                                $("#FSIA_ADDRESS2").val(this.FSIA_ADDRESS2);
+                                                $("#FSIA_ADDRESS3").val(this.FSIA_ADDRESS3);
+                                                $("#FSIA_ADDR_ISCORSP3").val(this.FSIA_ADDR_ISCORSP);
+                                            });
+                                        },
+                                        error: function (data) { }
+                                    });
+
+                                    addressType = 'R';
+
+                                    /*Block for Residential Address fetching*/
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        url: "http://" + Result_API + "/api/Institution/GetInstitAddressDetails/" + intitIdValue + "/" + addressType,
+                                        type: "GET",
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        success: function (result) {
+                                            $(result).each(function () {
+
+                                                $("#FSSC_COUNTRY_ID_AD2").val(this.FSSC_COUNTRY_ID);
+                                                var txtContryID = this.FSSC_COUNTRY_ID;
+                                                var txtProvID = this.FSSP_PROVINCE_ID;
+                                                var txtCityID = this.FSCT_CITY_ID;
+                                                var txtPostCodID = this.FSPS_POSTAL_ID;
+
+                                                /*Creating Ajax call for populating the related provinces and assignments*/
+                                                $.ajax({
+                                                    url: "http://" + Result_API + "/api/Province/GetProvinceDetailsByCont/" + txtContryID,
+                                                    type: "GET",
+                                                    contentType: "application/json; charset=utf-8",
+                                                    datatype: JSON,
+                                                    success: function (result) {
+                                                        $("#FSSP_PROVINCE_ID_AD2").empty();
+                                                        $("#FSSP_PROVINCE_ID_AD2").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                                                        $(result).each(function () {
+                                                            $("#FSSP_PROVINCE_ID_AD2").append($("<option></option>").val(this.FSSP_PROVINCE_ID).html(this.FSSP_PROVINCE_NAME));
+                                                        });
+                                                        $("#FSSP_PROVINCE_ID_AD2").val(txtProvID);
+                                                    },
+                                                    error: function (data) { }
+                                                });
+
+                                                /*Creating Ajax call for populating the related cities and assignments*/
+                                                $.ajax({
+                                                    "async": true,
+                                                    "crossDomain": true,
+                                                    url: "http://" + Result_API + "/api/City/GetCityDetailsByProvCont/" + txtProvID + "/" + txtContryID,
+                                                    type: "GET",
+                                                    contentType: "application/json; charset=utf-8",
+                                                    datatype: JSON,
+                                                    success: function (result) {
+                                                        $("#FSCT_CITY_ID_AD2").empty();
+                                                        $("#FSCT_CITY_ID_AD2").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                                                        $(result).each(function () {
+                                                            $("#FSCT_CITY_ID_AD2").append($("<option></option>").val(this.FSCT_CITY_ID).html(this.FSCT_CITY_NAME));
+                                                        });
+                                                        $("#FSCT_CITY_ID_AD2").val(txtCityID);
+                                                    },
+                                                    error: function (data) { }
+                                                });
+
+                                                /*Creating Ajax call for populating the related postal codes and assignments*/
+                                                $.ajax({
+                                                    "async": true,
+                                                    "crossDomain": true,
+                                                    url: "http://" + Result_API + "/api/PostalCodes/GetPostCodeDtlByCtyProvCont/" + txtCityID + "/" + txtProvID + "/" + txtContryID,
+                                                    type: "GET",
+                                                    contentType: "application/json; charset=utf-8",
+                                                    datatype: JSON,
+                                                    success: function (result) {
+                                                        $("#FSPS_POSTAL_ID_AD2").empty();
+                                                        $("#FSPS_POSTAL_ID_AD2").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                                                        $(result).each(function () {
+                                                            $("#FSPS_POSTAL_ID_AD2").append($("<option></option>").val(this.FSPS_POSTAL_ID).html(this.FSPS_POSTAL_CODE + "-" + this.FSPS_POSTAL_DESCRIPTION));
+                                                        });
+                                                        $("#FSPS_POSTAL_ID_AD2").val(txtPostCodID);
+                                                    },
+                                                    error: function (data) { }
+                                                });
+                                                $("#FSIA_ADDRESS12").val(this.FSIA_ADDRESS1);
+                                                $("#FSIA_ADDRESS22").val(this.FSIA_ADDRESS2);
+                                                $("#FSIA_ADDRESS32").val(this.FSIA_ADDRESS3);
+                                                $("#FSIA_ADDR_ISCORSP32").val(this.FSIA_ADDR_ISCORSP);
+                                            });
+                                        },
+                                        error: function (data) { }
+                                    });
+
+                                    addressType = 'B';
+
+                                    /*Block for Business Address fetching*/
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        url: "http://" + Result_API + "/api/Institution/GetInstitAddressDetails/" + intitIdValue + "/" + addressType,
+                                        type: "GET",
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        success: function (result) {
+                                            $(result).each(function () {
+
+                                                $("#FSSC_COUNTRY_ID_AD3").val(this.FSSC_COUNTRY_ID);
+                                                var txtContryID = this.FSSC_COUNTRY_ID;
+                                                var txtProvID = this.FSSP_PROVINCE_ID;
+                                                var txtCityID = this.FSCT_CITY_ID;
+                                                var txtPostCodID = this.FSPS_POSTAL_ID;
+
+                                                /*Creating Ajax call for populating the related provinces and assignments*/
+                                                $.ajax({
+                                                    "async": true,
+                                                    "crossDomain": true,
+                                                    url: "http://" + Result_API + "/api/Province/GetProvinceDetailsByCont/" + txtContryID,
+                                                    //url: "http://"+Result_API+"/api/Province/GetProvinceList/"
+                                                    type: "GET",
+                                                    contentType: "application/json; charset=utf-8",
+                                                    datatype: JSON,
+                                                    success: function (result) {
+                                                        $("#FSSP_PROVINCE_ID_AD3").empty();
+                                                        $("#FSSP_PROVINCE_ID_AD3").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                                                        $(result).each(function () {
+                                                            $("#FSSP_PROVINCE_ID_AD3").append($("<option></option>").val(this.FSSP_PROVINCE_ID).html(this.FSSP_PROVINCE_NAME));
+                                                        });
+                                                        $("#FSSP_PROVINCE_ID_AD3").val(txtProvID);
+                                                    },
+                                                    error: function (data) { }
+                                                });
+
+                                                /*Creating Ajax call for populating the related cities and assignments*/
+                                                $.ajax({
+                                                    "async": true,
+                                                    "crossDomain": true,
+                                                    url: "http://" + Result_API + "/api/City/GetCityDetailsByProvCont/" + txtProvID + "/" + txtContryID,
+                                                    type: "GET",
+                                                    contentType: "application/json; charset=utf-8",
+                                                    datatype: JSON,
+                                                    success: function (result) {
+                                                        $("#FSCT_CITY_ID_AD3").empty();
+                                                        $("#FSCT_CITY_ID_AD3").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                                                        $(result).each(function () {
+                                                            $("#FSCT_CITY_ID_AD3").append($("<option></option>").val(this.FSCT_CITY_ID).html(this.FSCT_CITY_NAME));
+                                                        });
+                                                        $("#FSCT_CITY_ID_AD3").val(txtCityID);
+                                                    },
+                                                    error: function (data) { }
+                                                });
+
+                                                /*Creating Ajax call for populating the related postal codes and assignments*/
+                                                $.ajax({
+                                                    "async": true,
+                                                    "crossDomain": true,
+                                                    url: "http://" + Result_API + "/api/PostalCodes/GetPostCodeDtlByCtyProvCont/" + txtCityID + "/" + txtProvID + "/" + txtContryID,
+                                                    type: "GET",
+                                                    contentType: "application/json; charset=utf-8",
+                                                    datatype: JSON,
+                                                    success: function (result) {
+                                                        $("#FSPS_POSTAL_ID_AD3").empty();
+                                                        $("#FSPS_POSTAL_ID_AD3").append($("<option value='' class='text-primary font-weight-bolder'>---Select---</option>"));
+                                                        $(result).each(function () {
+                                                            $("#FSPS_POSTAL_ID_AD3").append($("<option></option>").val(this.FSPS_POSTAL_ID).html(this.FSPS_POSTAL_CODE + "-" + this.FSPS_POSTAL_DESCRIPTION));
+                                                        });
+                                                        $("#FSPS_POSTAL_ID_AD3").val(txtPostCodID);
+                                                    },
+                                                    error: function (data) { }
+                                                });
+                                                $("#FSIA_ADDRESS13").val(this.FSIA_ADDRESS1);
+                                                $("#FSIA_ADDRESS23").val(this.FSIA_ADDRESS2);
+                                                $("#FSIA_ADDRESS33").val(this.FSIA_ADDRESS3);
+                                                $("#FSIA_ADDR_ISCORSP33").val(this.FSIA_ADDR_ISCORSP);
+                                            });
+                                        },
+                                        error: function (data) { }
+                                    });
+
+                                    /*Creating Ajax call for populating the related contact details and assignments*/
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        url: "http://" + Result_API + "/api/Institution/GetInstitContactDetails/" + intitIdValue,
+                                        type: "GET",
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        success: function (result) {
+                                            $(result).each(function () {
+                                                $("#FSIC_CONTACT_PERSON").val(this.FSIC_CONTACT_PERSON);
+                                                $("#FSIC_CONTACT_NO1").val(this.FSIC_CONTACT_NO1);
+                                                $("#FSIC_CONTACT_NO2").val(this.FSIC_CONTACT_NO2);
+                                                $("#FSIC_CONT_DESIGNAT").val(this.FSIC_CONT_DESIGNAT);
+                                                $("#FSIC_CONT_CNIC").val(this.FSIC_CONT_CNIC);
+                                                $("#FSIC_FAX_NO").val(this.FSIC_FAX_NO);
+                                                $("#FSIC_EMAIL1").val(this.FSIC_EMAIL1);
+                                                $("#FSIC_EMAIL2").val(this.FSIC_EMAIL2);
+                                                $("#FSIC_STATUS").val(this.FSIC_STATUS);
+                                            });
+                                        },
+                                        error: function (data) { }
+                                    });
+
+                                    /*Creating Ajax call for populating the related mobile contact details and assignments*/
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        url: "http://" + Result_API + "/api/Institution/GetInstitMobileDetails/" + intitIdValue,
+                                        type: "GET",
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        success: function (result) {
+                                            $(result).each(function () {
+                                                $("#FSIM_MOBILE_NO1").val(this.FSIM_MOBILE_NO1);
+                                                $("#FSIM_MOBILE_NO2").val(this.FSIM_MOBILE_NO2);
+                                            });
+                                        },
+                                        error: function (data) { }
+                                    });
+
+                                } else {
+                                    alert('No Data Found for given criteria.');
+                                }
+                            });
+                            if ($("#FSSI_INSTITUTE_ID").val() == '0') {
+
+                                if (confirm("Institution with this Registration and NTN Code doesn't exist, Do you want to Add new Institution?")) {
+                                    var go_to_url = "http://" + Result_Front + "/Institution";
+                                    document.location.href = go_to_url;
+                                }
+                            }
+                        },
+                        error: function (jqXhr, textStatus, errorMessage) { // error callback
+                            alert('error, Counld not found Result as provided parameter.' + errorMessage);
+                        }
+                    });
+                $(".spinner-box").attr("hidden", true)
+            }, 2500)
+        });
+    });
+
+    $(document).ready(function () {
+        $('form input').keydown(function (event) {
+            if (event.keyCode == 13) {
+                event.preventDefault();
+                return false;
+            }
+        });
+    });
+</script>
+
+<script type="text/javascript">
+
+
+    $(document).ready(function () {
+        var hCorpCount = 0;
+        $('#AddInstitution').click(function (e) {
+            var txtFormIssues = '';
+            var IsFormValid = false;
+
+            var values = $("[name='FSIA_ADDR_ISCORSP']")
+                .map(function () {
+                    return $(this).val();
+                })
+                .get();
+            var iCorAddrCount = 0;
+            for (var i = 0; i < values.length; i++) {
+                if (values[i] == 'Y') {
+                    iCorAddrCount++;
+                }
+            }
+            if (iCorAddrCount > 1) {
+                txtFormIssues += 'Correspondence Address cannot be more than one. Kindly correct and try again.\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSIT_INSTITYP_ID').val() == '') {
+                txtFormIssues += 'Institution Type not selected\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSSI_CATEGORY_CODE').val() == '') {
+                txtFormIssues += 'Institution Category not selected\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSSI_SHORT_CODE').val() == '') {
+                txtFormIssues += 'Please enter short code.\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSSI_REGISTRATION_NO').val() == '') {
+                txtFormIssues += 'Institution Registration No. not entered\n';
+                alert(txtFormIssues); IsFormValid = false;
+            }/* else if ($('#FSSI_REGISTRATION_DATE').val() == '') {
+                txtFormIssues += '. Institution Registration Date not selected\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSSI_NTN_NO').val() == '') {
+                txtFormIssues += '. Institution NTN No. not entered\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSSI_STRN_NO').val() == '') {
+                txtFormIssues += '. Institution STRN No. not entered\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSSI_EFFECT_FROM_DATE').val() == '') {
+                txtFormIssues += '. Effective From date not entered\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSSI_EFFECT_TO_DATE').val() == '') {
+                txtFormIssues += '. Effective To date not entered\n';
+                alert(txtFormIssues); IsFormValid = false;
+            }*/ else if ($('#FSSI_STATUS').val() == '') {
+                txtFormIssues += 'Institution Status not selected\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSIO_OWNER_NAME').val() == '') {
+                txtFormIssues += 'Institution Owner Name not entered\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } /*else if ($('#FSIO_OWNER_EMAIL').val() == '') {
+                txtFormIssues += '. Owner Email address not entered\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } */else if ($('#FSIA_ADDRESS1').val() == '') {
+                txtFormIssues += 'Address Line # 1 not entered\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSSC_COUNTRY_ID_AD').val() == '') {
+                txtFormIssues += 'Address country not selected\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSSP_PROVINCE_ID_AD').val() == '') {
+                txtFormIssues += 'Address province not selected\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSCT_CITY_ID_AD').val() == '') {
+                txtFormIssues += 'Address city not selected\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSPS_POSTAL_ID_AD').val() == '') {
+                txtFormIssues += 'Address postal code not selected\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSIA_ADDR_ISCORSP3').val() == '') {
+                txtFormIssues += 'Correspendence flag (Permanent Address) not selected\n';
+                alert(txtFormIssues); IsFormValid = false;
+            } /*else if ($('#FSIM_MOBILE_NO1').val() == '') {
+                txtFormIssues += '. Mobile No. 1 not entered\n';
+                //$('#lblError').val(txtFormIssues);
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSIM_MOBILE_NO2').val() == '') {
+                txtFormIssues += '. Mobile No. 2 not entered\n';
+                //$('#lblError').val(txtFormIssues);
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSIC_CONTACT_PERSON').val() == '') {
+                txtFormIssues += '. Contact Person not entered\n';
+                //$('#lblError').val(txtFormIssues);
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSIC_CONTACT_NO1').val() == '') {
+                txtFormIssues += '. Contact No. 1 not entered\n';
+                //$('#lblError').val(txtFormIssues);
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSIC_CONTACT_NO2').val() == '') {
+                txtFormIssues += '. Contact No. 2 not entered\n';
+                //$('#lblError').val(txtFormIssues);
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSIC_FAX_NO').val() == '') {
+                txtFormIssues += '. Fax No. not entered\n';
+                //$('#lblError').val(txtFormIssues);
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSIC_EMAIL1').val() == '') {
+                txtFormIssues += '. Email Address 1 not entered\n';
+                //$('#lblError').val(txtFormIssues);
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSIC_EMAIL2').val() == '') {
+                txtFormIssues += '. Email Address 2 not entered\n';
+                //$('#lblError').val(txtFormIssues);
+                alert(txtFormIssues); IsFormValid = false;
+            } else if ($('#FSIC_STATUS').val() == '') {
+                txtFormIssues += '. Institution Status not selected\n';
+                //$('#lblError').val(txtFormIssues);
+                alert(txtFormIssues); IsFormValid = false;
+            } */else {
+                IsFormValid = true;
+                $("#saving_spinner").removeAttr("hidden", true);
+            }
+            return IsFormValid;
+        });
+    });
+
+</script>
+
+<form id="form1" method="post" action="/Institution/SaveOrUpdateInstitution" class="form-horizontal">
+    @*<main class="content">
+        <div class="container-fluid p-0">*@
+    <div class="card">
+        <div class="card-header mt-3 pb-0">
+            <h1 class="card-title" style="font-weight:600; font-size:1.3rem; font-weight:bold">Institution Registration</h1>
+        </div>
+        <div class="card-body pt-0">
+            @*<div class="row">
+                    <h6 class="card-subtitle text-muted" style="font-weight:bold">Search Institution</h6>
+                </div>*@
+            <div class="row">
+                <div class="mb-2 col-md-3">
+                    <label class="text-success" for="InstitutionRegistration " style="font-weight:bold">Registration No:</label>
+                    <input type="text" class="form-control" name="InstitutionRegistration" id="InstitutionRegistration" placeholder="123456789" value="">
+                </div>
+                <div class="mb-3 col-md-3">
+                    <label class="text-success" for="Institution_Name" style="font-weight:bold">Institution Name:</label>
+                    <select class="selectpicker form-control" title="Select a number" data-hide-disabled="true"
+                            name="Institution_Name" id="Institution_Name">
+                        <option value="">---Select---</option>
+                    </select>
+                </div>
+                <div class="mb-2 col-md-3">
+                    <div> <label class="text-success" for="btnInstSearch " style="font-weight:bold"></label></div>
+                    <button class="btn btn-primary" type="button" id="btnInstSearch" name="btnInstSearch" onclick="btnInstSearch" value="Search">Search!</button>
+                </div>
+            </div>@*Ended Customer Basic Information 1st Phase*@
+
+            <div class="col-md-4">
+                @if (TempData["successInstitution"] != null)
+                {<div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>
+                        @TempData["successInstitution"]
+                    </strong>
+                </div>}
+            </div>
+        </div>
+        @*</div>
+
+            <div class="card">*@
+        <div class="col-12 col-lg-12">
+            <div class="tab tab-primary">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item"><a class="nav-link active" id="btnInstitBasicInfo" href="#primary-tab-1" data-bs-toggle="tab" role="tab" style="font-weight:bold">Institution Basic Info</a></li>
+                    <li class="nav-item"><a class="nav-link" id="btnDircetorInfor" href="#primary-tab-2" data-bs-toggle="tab" role="tab" style="font-weight:bold">Director Info</a></li>
+                    <li class="nav-item"><a class="nav-link" id="btnInstitAddress" href="#primary-tab-3" data-bs-toggle="tab" role="tab" style="font-weight:bold">Address</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="primary-tab-1" role="tabpanel">
+
+                        <div class="row">
+                            <div class="mb-2 col-md-3">
+                                <label class="text-white" for="FSSI_INSTITUTE_ID" style="font-weight:bold">Institute ID:</label>
+                                <input class="form-control" placeholder="Customer Code" name="FSSI_INSTITUTE_ID" id="FSSI_INSTITUTE_ID"
+                                       value="@TempData["Institutionid"]" maxlength="10" readonly>
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-white" for="FSIT_INSTITYP_ID" style="font-weight:bold">Type:<span class="bg-red">  *</span></label>
+                                <select class="form-select" name="FSIT_INSTITYP_ID" id="FSIT_INSTITYP_ID">
+                                    <option value="">--Select--</option>
+                                </select>
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label for="FSSI_CATEGORY_CODE" class="text-white" style="font-weight:bold">Institution Category:<span class="bg-red">  *</span></label>
+                                <select class="form-select" name="FSSI_CATEGORY_CODE" id="FSSI_CATEGORY_CODE">
+                                    <option value="">--Select--</option>
+                                    <option value="I">Internal</option>
+                                    <option value="E">External</option>
+                                </select>
+                            </div>                            <div class="mb-2 col-md-3">
+                                <label class="text-white" for="FSSI_OCCUP_INDSTRY_TYPE" style="font-weight:bold">Type of Business:<span class="bg-red">  *</span></label>
+                                <select class="form-select" name="FSSI_OCCUP_INDSTRY_TYPE" id="FSSI_OCCUP_INDSTRY_TYPE">
+                                    <option value="">--Select--</option>
+                                    <option value="1">Pharmaceutical</option>
+                                    <option value="2">Textile</option>
+                                    <option value="3">Others</option>
+                                </select>
+                            </div>
+                        </div>@*Ended Customer Basic Information 2nd Phase*@
+
+                        <div class="row">
+                            <div class="mb-2 col-md-3">
+                                <label class="text-white" for="FSSI_COMP_SECTOR_TYPE" style="font-weight:bold">Industry Type:<span class="bg-red">  *</span></label>
+                                <select class="form-select" name="FSSI_COMP_SECTOR_TYPE" id="FSSI_COMP_SECTOR_TYPE">
+                                    <option value="">--Select--</option>
+                                    <option value="1">Public Sector</option>
+                                    <option value="2">Private Sector</option>
+                                    <option value="3">Semi Govt</option>
+                                    <option value="4">NGO's</option>
+                                    <option value="5">Others</option>
+                                </select>
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label for="FSSI_SHORT_CODE" class="text-white" style="font-weight:bold">Short Code:<span class="bg-red">  *</span></label>
+                                <input class="form-control" placeholder="STL" name="FSSI_SHORT_CODE" id="FSSI_SHORT_CODE"
+                                       maxlength="10" />
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label for="FSSI_DESCRIPTION" class="text-white" style="font-weight:bold">"Name of Institution/Company:</label>
+                                <input class="form-control" placeholder="Salaam Fmaily Takaful Limited" name="FSSI_DESCRIPTION" id="FSSI_DESCRIPTION"
+                                       maxlength="100" />
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label for="FSSI_SHORT_DESCRIPTION" class="text-white" style="font-weight:bold">Short Description:</label>
+                                <input class="form-control" placeholder="SFTL" name="FSSI_SHORT_DESCRIPTION" id="FSSI_SHORT_DESCRIPTION"
+                                       maxlength="15" />
+                            </div>
+                        </div>@*Ended Customer Basic Information 3rd Phase*@
+
+                        <div class="row">
+                            <div class="mb-2 col-md-3">
+                                <label for="FSSI_WEB_ADDRESS" class="text-white" style="font-weight:bold">Website:</label>
+                                <input class="form-control" placeholder="www.salaamtakaful.com" name="FSSI_WEB_ADDRESS" id="FSSI_WEB_ADDRESS"
+                                       maxlength="50" />
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label for="FSSI_REGISTRATION_NO" class="text-white" style="font-weight:bold">Registration No:<span class="bg-red">  *</span></label>
+                                <input class="form-control" placeholder="Registration No" name="FSSI_REGISTRATION_NO" id="FSSI_REGISTRATION_NO"
+                                       maxlength="50" />
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label for="FSSI_REGISTRATION_DATE" class="text-white" style="font-weight:bold">Registration Date:</label>
+                                <input class="datefield form-control" placeholder="Registration Date" name="FSSI_REGISTRATION_DATE" id="FSSI_REGISTRATION_DATE"
+                                       data-val="true" type="date" />
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-white" for="FSSI_NTN_NO" style="font-weight:bold">NTN No:</label>
+                                <input class="form-control" placeholder="123456789" name="FSSI_NTN_NO" id="FSSI_NTN_NO"
+                                       maxlength="25" />
+                            </div>
+                        </div>@*Ended Customer Basic Information 4th Phase*@
+
+                        <div class="row">
+                            <div class="mb-2 col-md-3">
+                                <label class="text-white" for="FSSI_STRN_NO" style="font-weight:bold">STRN No:</label>
+                                <input class="form-control" placeholder="12542152" name="FSSI_STRN_NO" id="FSSI_STRN_NO"
+                                       maxlength="25" />
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label for="FSSI_EFFECT_FROM_DATE" class="text-white" style="font-weight:bold">Effective Date From:</label>
+                                <input class="datefield form-control" placeholder="Effective Date From" name="FSSI_EFFECT_FROM_DATE" id="FSSI_EFFECT_FROM_DATE"
+                                       data-val="true" type="date" />
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label for="FSSI_EFFECT_TO_DATE" class="text-white" style="font-weight:bold">Effective Date To:</label>
+                                <input class="datefield form-control" placeholder="Effective Date To" name="FSSI_EFFECT_TO_DATE" id="FSSI_EFFECT_TO_DATE"
+                                       data-val="true" type="date" />
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-white" for="FSSI_BANK_ROLE" style="font-weight:bold">Bank Role:</label>
+                                <select class="form-select" name="FSSI_BANK_ROLE" id="FSSI_BANK_ROLE">
+                                    <option value="">--- Select Status ---</option>
+                                    <option value="1">CASH</option>
+                                    <option value="2">CHEQUE</option>
+                                </select>
+                            </div>
+                        </div>@*Ended Customer Basic Information 5th Phase*@
+                        <div class="row">
+                            @*<div class="mb-2 col-md-3">
+                                    <label for="" class="text-white" style="font-weight:bold"></label>
+                                    <input class="form-control" name="btnFSSI_BANK_COMMSN" id="btnFSSI_BANK_COMMSN" value="Bank Commission" type="button" />
+                                </div>*@
+                            <div class="mb-2 col-md-3">
+                                <label class="text-white" for="FSSI_STATUS" style="font-weight:bold">Status:<span class="bg-red">  *</span></label>
+                                <select class="form-select" name="FSSI_STATUS" id="FSSI_STATUS">
+                                    <option value="">--Select--</option>
+                                    <option value="Y">Active</option>
+                                    <option value="N">In-Active</option>
+                                    <option value="B">Blacklisted</option>
+                                    <option value="R">Reinstated</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <br /><br />
+                            <h1 class="tab-title" style="font-weight:bold"><strong><u>CONTACT PERSON INFORMATION</u></strong></h1>
+                        </div>
+                        <div class="row">
+                            <div class="mb-2 col-md-3">
+                                <label for="FSIC_CONTACT_PERSON" class="text-white">Full Name  :</label>
+                                <input class="form-control" name="FSIC_CONTACT_PERSON" id="FSIC_CONTACT_PERSON" />
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label for="FSIC_CONT_DESIGNAT" class="text-white">Designation:</label>
+                                <input class="form-control" name="FSIC_CONT_DESIGNAT" id="FSIC_CONT_DESIGNAT" />
+                            </div>
+                            <div class="mb-2 col-md-6">
+                                <label for="FSIC_EMAIL1" class="text-white">Email Address 1:</label>
+                                <input type="email" class="form-control" placeholder="Email Address" name="FSIC_EMAIL1" id="FSIC_EMAIL1"
+                                       maxlength="100" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="mb-2 col-md-6">
+                                <label for="FSIC_EMAIL2" class="text-white">Email Address 2:</label>
+                                <input type="email" class="form-control" placeholder="Email Address" name="FSIC_EMAIL2" id="FSIC_EMAIL2"
+                                       maxlength="100" />
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label class="text-white" for="FSIC_CONT_CNIC" style="font-weight:bold">Identification No:<span class="bg-red">  *</span></label>
+                                <input class="form-control" placeholder="Identification No."
+                                       maxlength="13" name="FSIC_CONT_CNIC" id="FSIC_CONT_CNIC">
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label for="FSIC_CONTACT_NO1" class="text-white">Contact No. 1:</label>
+                                <input class="form-control" name="FSIC_CONTACT_NO1" id="FSIC_CONTACT_NO1" maxlength="20" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="mb-2 col-md-3">
+                                <label for="FSIC_CONTACT_NO2" class="text-white">Contact No. 2:</label>
+                                <input class="form-control" name="FSIC_CONTACT_NO2" id="FSIC_CONTACT_NO2" maxlength="20" />
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label for="FSIM_MOBILE_NO1" class="text-white">Mobile No. 1:</label>
+                                <input class="form-control" name="FSIM_MOBILE_NO1" id="FSIM_MOBILE_NO1" maxlength="20" />
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label for="FSIM_MOBILE_NO2" class="text-white">Mobile No. 2:</label>
+                                <input class="form-control" name="FSIM_MOBILE_NO2" id="FSIM_MOBILE_NO2" maxlength="20" />
+                            </div>
+                            <div class="mb-2 col-md-3">
+                                <label for="FSIC_FAX_NO" class="text-white">Fax No:</label>
+                                <input class="form-control" name="FSIC_FAX_NO" id="FSIC_FAX_NO" maxlength="20" />
+                            </div>
+                        </div>
+                        @*<div class="mb-2 col-md-3">
+                                <label class="text-white" for="FSIC_STATUS" style="font-weight:bold">Status:</label>
+                                <select class="form-select" name="FSIC_STATUS" id="FSIC_STATUS">
+                                    <option value="">--Select--</option>
+                                    <option value="Y">Active</option>
+                                    <option value="N">In-Active</option>
+                                    <option value="B">Backlisted</option>
+                                    <option value="R">Reinstated</option>
+                                </select>
+                            </div>*@
+
+                    </div>
+                    <div class="tab-pane" id="primary-tab-2" role="tabpanel">
+                        <div class="row">
+                            <h2 class="tab-title" style="font-weight:bold">Director Information</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                @*<table class="table table-bordered"
+                                           id="TableDirInfo"
+                                           cellspacing="0"
+                                           align="center"
+                                           width="100%">
+                                        <tr>
+                                            <td class="text-white" style="font-weight:bold">Full Name:</td>
+                                            <td class="text-white" style="font-weight:bold">Designation:</td>
+                                            <td class="text-white" style="font-weight:bold">Email:</td>
+                                            <td class="text-white" style="font-weight:bold">CNIC #:</td>
+                                            <td class="text-white" style="font-weight:bold">CNIC Issuance:</td>
+                                            <td class="text-white" style="font-weight:bold">CNIC Expiry:</td>
+                                            <td class="text-white" style="font-weight:bold"></td>
+                                        </tr>
+                                    </table>*@
+
+
+                                <div class="col-md-12" style="overflow-x:auto">
+                                    <table class="table table-bordered"
+                                           id="TableDirInfo"
+                                           cellspacing="0"
+                                           align="center"
+                                           width="100%">
+                                        <tr>
+                                            <td class="text-white" style="font-weight:bold">Full Name:</td>
+                                            <td class="text-white" style="font-weight:bold">Designation:</td>
+                                            <td class="text-white" style="font-weight:bold">Email:</td>
+                                            <td class="text-white" style="font-weight:bold">CNIC #:</td>
+                                            <td class="text-white" style="font-weight:bold">CNIC Issuance:</td>
+                                            <td class="text-white" style="font-weight:bold">CNIC Expiry:</td>
+                                            <td class="text-white" style="font-weight:bold">Delete Info:</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="row mt-2">
+                                    <div>
+                                        <button class="btn btn-success" type="button" name="btnDirInfo" id="btnDirInfo">
+                                            Add New
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="primary-tab-3" role="tabpanel">
+                        <div class="row">
+                            <h2 class="h4" style="font-weight:bold">Permanent Address </h2>
+                        </div>
+                        <div class="row">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="mb-2 col-md-6">
+                                        <label for="FSIA_ADDRESS1" class="text-white" style="font-weight:bold">Address Line 1:<span class="bg-red">  *</span></label>
+                                        <input class="form-control" placeholder="Address Line 1" name="FSIA_ADDRESS1" id="FSIA_ADDRESS1"
+                                               maxlength="300" />
+                                    </div>
+                                    <div class="mb-2 col-md-6">
+                                        <label for="FSIA_ADDRESS2" class="text-white" style="font-weight:bold">Address Line 2:</label>
+                                        <input class="form-control" placeholder="Address Line 2" name="FSIA_ADDRESS2" id="FSIA_ADDRESS2"
+                                               maxlength="300" />
+                                    </div>
+                                    <div class="mb-2 col-md-6">
+                                        <label for="FSIA_ADDRESS3" class="text-white" style="font-weight:bold">Address Line 3:</label>
+                                        <input class="form-control" placeholder="Address Line 3" name="FSIA_ADDRESS3" id="FSIA_ADDRESS3"
+                                               maxlength="300" />
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="FSSC_COUNTRY_ID_AD">Country:<span class="bg-red">  *</span></label>
+                                        <select class="form-select" name="FSSC_COUNTRY_ID" id="FSSC_COUNTRY_ID_AD">
+                                            <option value="">--Select--</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="FSSP_PROVINCE_ID_AD">Province:<span class="bg-red">  *</span></label>
+                                        <select class="form-select" name="FSSP_PROVINCE_ID" id="FSSP_PROVINCE_ID_AD">
+                                            <option value="">
+                                                --Select--
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="FSCT_CITY_ID_AD">City:<span class="bg-red">  *</span></label>
+                                        <select class="form-select" name="FSCT_CITY_ID" id="FSCT_CITY_ID_AD">
+                                            <option value="">
+                                                --Select--
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="FSPS_POSTAL_ID_AD">Postal Code:<span class="bg-red">  *</span></label>
+                                        <select class="form-select" name="FSPS_POSTAL_ID" id="FSPS_POSTAL_ID_AD">
+                                            <option value="">
+                                                --Select--
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="FSIA_ADDR_ISCORSP3" style="font-weight:bold">Addr. Correspondence?:</label>
+                                        <select class="form-select" name="FSIA_ADDR_ISCORSP" id="FSIA_ADDR_ISCORSP3">
+                                            <option value="">--Select--</option>
+                                            <option value="Y">YES</option>
+                                            <option value="N">NO</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <h2 class="h4" style="font-weight:bold">Correspondence Address </h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="mb-2 col-md-6">
+                                        <label for="FSIA_ADDRESS12" class="text-white" style="font-weight:bold">Address Line 1:</label>
+                                        <input class="form-control" placeholder="Address Line 1" name="FSIA_ADDRESS1" id="FSIA_ADDRESS12"
+                                               maxlength="300" />
+                                    </div>
+                                    <div class="mb-2 col-md-6">
+                                        <label for="FSIA_ADDRESS22" class="text-white" style="font-weight:bold">Address Line 2:</label>
+                                        <input class="form-control" placeholder="Address Line 2" name="FSIA_ADDRESS2" id="FSIA_ADDRESS22"
+                                               maxlength="300" />
+                                    </div>
+                                    <div class="mb-2 col-md-6">
+                                        <label for="FSIA_ADDRESS32" class="text-white" style="font-weight:bold">Address Line 3:</label>
+                                        <input class="form-control" placeholder="Address Line 3" name="FSIA_ADDRESS3" id="FSIA_ADDRESS32"
+                                               maxlength="300" />
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="FSSC_COUNTRY_ID_AD2">Country:</label>
+                                        <select class="form-select" name="FSSC_COUNTRY_ID" id="FSSC_COUNTRY_ID_AD2">
+                                            <option value="">
+                                                --Select--
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="FSSP_PROVINCE_ID_AD2">
+                                            Province:
+                                        </label>
+                                        <select class="form-select" name="FSSP_PROVINCE_ID" id="FSSP_PROVINCE_ID_AD2">
+                                            <option value="">
+                                                --Select--
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="FSCT_CITY_ID_AD2">City:</label>
+                                        <select class="form-select" name="FSCT_CITY_ID" id="FSCT_CITY_ID_AD2">
+                                            <option value="">
+                                                --Select--
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="FSPS_POSTAL_ID_AD2">Postal Code:</label>
+                                        <select class="form-select" name="FSPS_POSTAL_ID" id="FSPS_POSTAL_ID_AD2">
+                                            <option value="">
+                                                --Select--
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="FSIA_ADDR_ISCORSP32" style="font-weight:bold">Addr. Correspondence?:</label>
+                                        <select class="form-select" name="FSIA_ADDR_ISCORSP" id="FSIA_ADDR_ISCORSP32">
+                                            <option value="">--Select--</option>
+                                            <option value="Y">YES</option>
+                                            <option value="N">NO</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="Correspondence">Same as Above Address:</label><br>
+                                        <input type="radio" name="Correspondence" value="CorPond" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <h2 class="h4" style="font-weight:bold">Business Address </h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="mb-2 col-md-6">
+                                        <label for="FSIA_ADDRESS13" class="text-white" style="font-weight:bold">Address Line 1:</label>
+                                        <input class="form-control" placeholder="Address Line 1" name="FSIA_ADDRESS1" id="FSIA_ADDRESS13"
+                                               maxlength="300" />
+                                    </div>
+                                    <div class="mb-2 col-md-6">
+                                        <label for="FSIA_ADDRESS23" class="text-white" style="font-weight:bold">Address Line 2:</label>
+                                        <input class="form-control" placeholder="Address Line 2" name="FSIA_ADDRESS2" id="FSIA_ADDRESS23"
+                                               maxlength="300" />
+                                    </div>
+                                    <div class="mb-2 col-md-6">
+                                        <label for="FSIA_ADDRESS33" class="text-white" style="font-weight:bold">Address Line 3:</label>
+                                        <input class="form-control" placeholder="Address Line 3" name="FSIA_ADDRESS3" id="FSIA_ADDRESS33"
+                                               maxlength="300" />
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="FSSC_COUNTRY_ID_AD3">Country:</label>
+                                        <select class="form-select" name="FSSC_COUNTRY_ID" id="FSSC_COUNTRY_ID_AD3">
+                                            <option value="">
+                                                --Select--
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="FSSP_PROVINCE_ID_AD3">Province:</label>
+                                        <select class="form-select" name="FSSP_PROVINCE_ID" id="FSSP_PROVINCE_ID_AD3">
+                                            <option value="">
+                                                --Select--
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="FSCT_CITY_ID_AD3">City:</label>
+                                        <select class="form-select" name="FSCT_CITY_ID" id="FSCT_CITY_ID_AD3">
+                                            <option value="">
+                                                --Select--
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="FSPS_POSTAL_ID_AD3">Postal Code:</label>
+                                        <select class="form-select" name="FSPS_POSTAL_ID" id="FSPS_POSTAL_ID_AD3">
+                                            <option value="">
+                                                --Select--
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="FSIA_ADDR_ISCORSP33" style="font-weight:bold">Addr. Correspondence?:</label>
+                                        <select class="form-select" name="FSIA_ADDR_ISCORSP" id="FSIA_ADDR_ISCORSP33">
+                                            <option value="">--Select--</option>
+                                            <option value="Y">YES</option>
+                                            <option value="N">NO</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2 col-md-3">
+                                        <label class="text-white" for="CorrespondenceBusi">Same as Above Address:</label><br>
+                                        <input type="radio" name="CorrespondenceBusi" value="Busi" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="">
+                            <button class="btn btn-success" style="margin-left:40%; width:23%; text-align: center;" type="submit"
+                                    id="AddInstitution" name="AddInstitution">
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="spinner-box" hidden>
+        <img src="/Assets/img/photos/loader_img.gif" id="loaderImage" />
+        <div id="loader_text" class="text-white pt-2 text-center">Please wait...While Institution Data is being Loaded!</div>
+    </div>
+
+    <div id="saving_spinner" hidden>
+        <img src="/Assets/img/photos/loader_img.gif" id="loaderImage" />
+        <div id="loader_text" class="text-white pt-2 text-center">Please wait...While Institution is being Registered!</div>
+    </div>
+    <!--</div>-->@*Ended Main Div  *@
+    <!--</main>-->
+</form>

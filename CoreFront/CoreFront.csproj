@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove=".config\**" />
+    <Compile Remove="bin\**" />
+    <Compile Remove="obj\**" />
+    <Content Remove=".config\**" />
+    <Content Remove="bin\**" />
+    <Content Remove="obj\**" />
+    <EmbeddedResource Remove=".config\**" />
+    <EmbeddedResource Remove="bin\**" />
+    <EmbeddedResource Remove="obj\**" />
+    <None Remove=".config\**" />
+    <None Remove="bin\**" />
+    <None Remove="obj\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
+    <None Include="Views\Inquiry\Inquiry.cshtml" />
+    <None Include="wwwroot\Assets\css\app.css" />
+    <None Include="wwwroot\Assets\css\light.css" />
+    <None Include="wwwroot\Assets\fonts\.gitkeep" />
+    <None Include="wwwroot\Assets\fonts\fa-solid-900.woff2" />
+    <None Include="wwwroot\Assets\img\avatars\avatar-2.jpg" />
+    <None Include="wwwroot\Assets\img\avatars\avatar-3.jpg" />
+    <None Include="wwwroot\Assets\img\avatars\avatar-4.jpg" />
+    <None Include="wwwroot\Assets\img\avatars\avatar-5.jpg" />
+    <None Include="wwwroot\Assets\img\avatars\avatar.jpg" />
+    <None Include="wwwroot\Assets\img\flags\us.png" />
+    <None Include="wwwroot\Assets\img\icons\brand-1.svg" />
+    <None Include="wwwroot\Assets\img\icons\brand-2.svg" />
+    <None Include="wwwroot\Assets\img\icons\brand-3.svg" />
+    <None Include="wwwroot\Assets\img\icons\brand-4.svg" />
+    <None Include="wwwroot\Assets\img\icons\brand-5.svg" />
+    <None Include="wwwroot\Assets\img\icons\icon-48x48.png" />
+    <None Include="wwwroot\Assets\img\photos\unsplash-1.jpg" />
+    <None Include="wwwroot\Assets\img\photos\unsplash-2.jpg" />
+    <None Include="wwwroot\Assets\img\photos\unsplash-3.jpg" />
+    <None Include="wwwroot\Assets\js\app.js" />
+    <None Include="wwwroot\Assets\js\app.js.map" />
+    <None Include="wwwroot\Assets\js\datatables.js" />
+    <None Include="wwwroot\Assets\js\settings.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="jQuery.UI" Version="1.12.1.1" />
+    <PackageReference Include="jQuery.UI.Combined" Version="1.12.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.15" />
+    <PackageReference Include="System.CodeDom" Version="6.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
+    <Folder Include="wwwroot\Resources\" />
+    <Folder Include="wwwroot\Uploads\" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,500 @@
+﻿
+@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Configuration.Json
+@inject IConfiguration Configuration
+@{
+    ViewData["Title"] = "Group Inquiry";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css" />
+<script src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript">
+    const app_host_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_IP").Value);
+    const api_port_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_PNO").Value);
+    const Result_API = (app_host_API + ":" + api_port_API);
+
+    const app_host_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_IP").Value);
+    const api_port_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_PNO").Value);
+    const Result_Front = (app_host_Front + ":" + api_port_Front);
+</script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#btnQuotSearch').click(function (e) {
+            let inquiry_quot = $("#FGQH_QUOTATHDR_CODE_Ser").val();
+            $(".spinner-box").removeAttr("hidden", true);
+            setTimeout(function () {
+                $.ajax({
+                    url: "http://" + Result_API + "/api/Inquiry/GetInquiryDetails/" + inquiry_quot,
+                    type: "GET",
+                    contentType: "application/json; charset=utf-8",
+                    datatype: JSON,
+                    success: function (result) {
+                        $(".form-control").val("");
+                        if (result.length == 0) {
+                            //    $("#noQuoInfo").modal("show");
+                        }
+                        else {
+                            $(result).each(function () {
+                                var _FGPH_POLCOMM_DATE = new Date(this.FGPH_POLCOMM_DATE);
+                                var day = ('0' + _FGPH_POLCOMM_DATE.getDate()).slice(-2);
+                                var month = ('0' + _FGPH_POLCOMM_DATE.getMonth()).slice(-2);
+                                month = Number(month) + 1;
+                                if (month < 10)
+                                    month = '0' + month.toString();
+                                var _FGPH_POLCOMM_DATE = _FGPH_POLCOMM_DATE.getFullYear() + "-" + (month) + "-" + (day);
+
+                                var _FGPH_POLEXPRY_DATE = new Date(this.FGPH_POLEXPRY_DATE);
+                                var day = ('0' + _FGPH_POLEXPRY_DATE.getDate()).slice(-2);
+                                var month = ('0' + _FGPH_POLEXPRY_DATE.getMonth()).slice(-2);
+                                month = Number(month) + 1;
+                                if (month < 10)
+                                    month = '0' + month.toString();
+                                var _FGPH_POLEXPRY_DATE = _FGPH_POLEXPRY_DATE.getFullYear() + "-" + (month) + "-" + (day);
+
+                                $("#FGQH_QUOTATHDR_CODE").val(this.FGQH_QUOTATHDR_CODE);
+                                //$("#FGQH_QUOTATHDR_ID").val(this.FGQH_QUOTATHDR_ID);
+
+                                $("#FGPH_POLICY_NO").val(this.FGPH_POLICY_NO);
+                                $("#FGPH_POLCOMM_DATE").val(_FGPH_POLCOMM_DATE);
+                                $("#FGPH_POLEXPRY_DATE").val(_FGPH_POLEXPRY_DATE);
+                                $("#POLICY_MODE").val(this.POLICY_MODE);
+                                $("#CUSTOMER_NAME").val(this.CUSTOMER_NAME);
+                                $("#FSPM_PRODUCT_NAME").val(this.FSPM_PRODUCT_NAME);
+                                $("#FSPM_PRODUCT_NAME2").val(this.FSPM_PRODUCT_NAME2);
+                                $("#FGPP_GROSS_CONTRIB").val(this.FGPP_GROSS_CONTRIB);
+                                $("#FGPP_NET_CONTRIB").val(this.FGPP_NET_CONTRIB);
+                                $("#FGPP_SUMASSURED").val(this.FGPP_SUMASSURED);
+                                $("#FGPP_FCL_SUMCOVRD").val(this.FGPP_FCL_SUMCOVRD);
+                                $("#NUMBER_OF_EMPLOYEES").val(this.TOTAL_NUM_OF_EMPLOYEES);
+                                $("#AVG_AGE_OF_EMPLOYEES").val(this.AVG_AGE_OF_EMPLOYEES);
+                                $("#MAX_AGE_OF_EMPLOYEES").val(this.MAX_AGE_OF_EMPLOYEES);
+                                $("#MIN_AGE_OF_EMPLOYEES").val(this.MIN_AGE_OF_EMPLOYEES);
+                                $("#NO_OF_EMPLOYEES_ABOVE_SIXTY").val(this.NO_OF_EMPLOYEES_ABOVE_SIXTY);
+                                $("#NO_OF_EMPLOYEES_BELOW_18").val(this.NO_OF_EMPLOYEES_BELOW_18);
+                                $("#AVG_TAKAFUL_SUM").val(this.AVG_TAKAFUL_SUM);
+                                $("#MIN_TAKAFUL_SUM").val(this.MIN_TAKAFUL_SUM);
+                                $("#MAX_TAKAFUL_SUM").val(this.MAX_TAKAFUL_SUM);
+                                var quoID = this.FGQH_QUOTATHDR_ID;
+                                //var compGrpID = this.FGQG_COMPGRP_ID;
+
+                                //Benefit Details
+                                let RidersResultArray = [];
+                                $.ajax({
+                                    url: "http://" + Result_API + "/api/Inquiry/Get_Inquiry_Rider_Details/" + quoID,
+                                    type: "GET",
+                                    contentType: "application/json; charset=utf-8",
+                                    datatype: JSON,
+                                    success: function (result) {
+                                        console.log("benefits result")
+                                        console.log(result)
+                                        if (result.length != 0) {
+                                            RidersResultArray = result;
+                                            for (let i = 0; i < RidersResultArray.length; i++) {
+                                                if (RidersResultArray[i].FGQR_RIDERST_DATE != null && RidersResultArray[i].FGQR_RIDEREN_DATE != null) {
+                                                    let riderStartDate = (RidersResultArray[i].FGQR_RIDERST_DATE).slice(0, 10);
+                                                    let riderEndDate = (RidersResultArray[i].FGQR_RIDEREN_DATE).slice(0, 10);
+
+                                                    RidersResultArray[i].FGQR_RIDERST_DATE = riderStartDate;
+                                                    RidersResultArray[i].FGQR_RIDEREN_DATE = riderEndDate;
+                                                }
+                                            }
+                                            $.fn.dataTable.ext.errMode = 'throw';
+                                            $("#RidersDTLGrid").DataTable({
+                                                bLengthChange: true,
+                                                lengthMenu: [[5, 10, -1], [5, 10, "All"]],
+                                                bFilter: true,
+                                                bSort: true,
+                                                bPaginate: true,
+                                                data: RidersResultArray,
+                                                "columns": [{ "data": "FSPM_PRODUCT_ID" },
+                                                { "data": "FGQE_QUOTEVNT_ID" },
+                                                { "data": "FGQR_RIDERST_DATE" },
+                                                { "data": "FGQR_RIDEREN_DATE" },
+                                                { "data": "FGQR_PFREQ_FSCD_DID" },
+                                                { "data": "FGQR_PAYBLE_FLAG" },
+                                                { "data": "FGQR_LOADING_TYPE" },
+                                                { "data": "FGQR_LOADING_VALUE" },
+                                                { "data": "FGQR_RIDER_CONTRIB" },
+                                                { "data": "FGQR_NET_CONTRIB" },
+                                                { "data": "FGQR_STATUS" },
+                                                ],
+                                            });
+                                        }
+                                        //else {
+                                        //    setTimeout(function () {
+                                        //        $("#noBenefitInfo").modal("show");
+                                        //    }, 1000);
+                                        //}
+                                    },
+                                    error: function (data) {
+                                    }
+                                });
+                            });
+
+                            ///GRID TABLES///
+                            ///Covered Members
+                            let MembersResultArray = [];
+                            $.ajax({
+                                url: "http://" + Result_API + "/api/Inquiry/Get_Inquiry_Member_Details/" + inquiry_quot,
+                                type: "GET",
+                                contentType: "application/json; charset=utf-8",
+                                datatype: JSON,
+                                success: function (result) {
+                                    MembersResultArray = result;
+                                    for (let i = 0; i < MembersResultArray.length; i++) {
+                                        if (MembersResultArray[i].FGPC_POL_COVG_STDATE != null && MembersResultArray[i].FGPC_POL_COVG_ENDATE != null) {
+                                            let covgStartDate = (MembersResultArray[i].FGPC_POL_COVG_STDATE).slice(0, 10);
+                                            let covgEndDate = (MembersResultArray[i].FGPC_POL_COVG_ENDATE).slice(0, 10);
+
+                                            MembersResultArray[i].FGPC_POL_COVG_STDATE = covgStartDate;
+                                            MembersResultArray[i].FGPC_POL_COVG_ENDATE = covgEndDate;
+                                        }
+                                    }
+                                    $.fn.dataTable.ext.errMode = 'throw';
+                                    $("#CoveredPersonstablesGrid").DataTable({
+                                        bLengthChange: true,
+                                        lengthMenu: [[5, 10, -1], [5, 10, "All"]],
+                                        bFilter: true,
+                                        bSort: true,
+                                        bPaginate: true,
+                                        data: MembersResultArray,
+                                        "columns": [{ "data": "FGPC_CUST_CNIC" },
+                                        { "data": "FGPC_CUST_NAME" },
+                                        { "data": "FGPC_EMP_AGE" },
+                                        { "data": "FGPC_EMP_DESIGN" },
+                                        { "data": "FGPC_POL_COVG_TERM" },
+                                        { "data": "FGPC_POL_COVG_STDATE" },
+                                        { "data": "FGPC_POL_COVG_ENDATE" },
+                                        { "data": "FGPC_POLGROSS_CONTRIB" },
+                                        { "data": "FGPC_NET_CONTRIB" },
+                                        { "data": "FGPC_POL_SUMASSURED" },
+                                        { "data": "FGPC_FCL_SUMASSURED" }
+                                        ],
+                                    });
+                                },
+                                error: function (data) {
+                                }
+                            });
+
+                            ///Pending Members
+                            let PendingMembResultArray = [];
+                            $.ajax({
+                                url: "http://" + Result_API + "/api/Inquiry/Get_Inquiry_Pending_Member_Details/" + inquiry_quot,
+                                type: "GET",
+                                contentType: "application/json; charset=utf-8",
+                                datatype: JSON,
+                                success: function (result) {
+                                    PendingMembResultArray = result;
+                                    for (let i = 0; i < PendingMembResultArray.length; i++) {
+                                        if (PendingMembResultArray[i].FGBU_POL_COVGE_STDATE != null && PendingMembResultArray[i].FGBU_POL_COVGE_EDDATE != null) {
+                                            let PcovgStartDate = (PendingMembResultArray[i].FGBU_POL_COVGE_STDATE).slice(0, 10);
+                                            let PcovgEndDate = (PendingMembResultArray[i].FGBU_POL_COVGE_EDDATE).slice(0, 10);
+
+                                            PendingMembResultArray[i].FGBU_POL_COVGE_STDATE = PcovgStartDate;
+                                            PendingMembResultArray[i].FGBU_POL_COVGE_EDDATE = PcovgEndDate;
+                                        }
+                                    }
+                                    console.log(PendingMembResultArray);
+                                    $.fn.dataTable.ext.errMode = 'throw';
+                                    $("#PendingPersonsDTLGrid").DataTable({
+                                        bLengthChange: true,
+                                        lengthMenu: [[5, 10, -1], [5, 10, "All"]],
+                                        bFilter: true,
+                                        bSort: true,
+                                        bPaginate: true,
+                                        data: PendingMembResultArray,
+                                        "columns": [{ "data": "FGBU_CUST_CNIC" },
+                                        { "data": "FGBU_CUST_NAME" },
+                                        { "data": "FGBU_EMP_AGE" },
+                                        { "data": "FGBU_EMP_DESIGN" },
+                                        { "data": "FGBU_POL_COVGE_TERM" },
+                                        { "data": "FGBU_POL_COVGE_STDATE" },
+                                        { "data": "FGBU_POL_COVGE_EDDATE" },
+                                        { "data": "FGBU_POL_COVGE_SUMASSURD" },
+                                        { "data": "SUMASSURED_CRITERIA" }
+                                        ],
+                                    });
+                                },
+                                error: function (data) {
+                                }
+                            });
+                        }
+                    },
+                    error: function (data) {
+                    }
+                });
+
+                $(".spinner-box").attr("hidden", true)
+            }, 4500)
+        });
+
+        //$("#btnCloseNoQuo").click(function () {
+        //    $('#noQuoInfo').modal('hide');
+        //})
+        //$("#btnCloseNoBenefit").click(function () {
+        //    $('#noBenefitInfo').modal('hide');
+        //})
+    });
+
+</script>
+<form method="post" action="" class="form-horizontal">
+    <div class="col-sm-10 col-md-11 col-lg-12">
+        <div class="card px-3 pb-3">
+            <div class="card-header">
+                <h1 class="card-subtitle text-center text-muted mt-5 mb-0" style="font-weight:700; font-size:1.5rem; font-weight:bold">Group Inquiry</h1>
+            </div>
+            <div class="card-body pb-0">
+                <div class="row">
+                    <h6 class="card-subtitle text-success pb-3" style="font-size: 1.1rem; font-weight:bold">Search Quotation:</h6>
+                </div>
+                <div class="row pt-0">
+                    <div class="input-group">
+                        <button class="btn btn-secondary" type="button" name="btnQuotSearch" id="btnQuotSearch" value="Search">Go!</button>
+                        <input type="text" name="FGQH_QUOTATHDR_CODE_Ser" id="FGQH_QUOTATHDR_CODE_Ser" style="width:50%" placeholder="QT100000001" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-4 p-2">
+                    @if (TempData["successQuotation"] != null)
+                    {<div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <strong>
+                            @TempData["successQuotation"]
+                        </strong>
+                    </div>}
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <div class="card col-md-12 p-3" style="margin-right:8px">
+                <div class="card-body">
+                    <div class="row">
+                        <h4 class="text-primary" style="font-weight:bold">Quotation Details:</h4>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success mb-1" for="FGQH_QUOTATHDR_CODE" style="font-weight:bold">Quotation Code:</label>
+                            <input class="form-control" name="FGQH_QUOTATHDR_CODE" id="FGQH_QUOTATHDR_CODE" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success mb-1" for="FGPH_POLICY_NO" style="font-weight:bold">Policy No:</label>
+                            <input class="form-control" name="FGPH_POLICY_NO" id="FGPH_POLICY_NO" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success mb-1" for="FGPH_POLCOMM_DATE" style="font-weight:bold">Policy Issue Date:</label>
+                            <input type="date" class="form-control" name="FGPH_POLCOMM_DATE" id="FGPH_POLCOMM_DATE" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success mb-1" for="FGPH_POLEXPRY_DATE" style="font-weight:bold">Policy Expiry Date:</label>
+                            <input type="date" class="form-control" name="FGPH_POLEXPRY_DATE" id="FGPH_POLEXPRY_DATE" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success text-center mb-1" for="POLICY_MODE" style="font-weight:bold">Policy Mode:</label>
+                            <input class="form-control" name="POLICY_MODE" id="POLICY_MODE" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success text-center mb-1" for="CUSTOMER_NAME" style="font-weight:bold">Customer Name:</label>
+                            <input class="form-control" name="CUSTOMER_NAME" id="CUSTOMER_NAME" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success text-center mb-1" for="FSPM_PRODUCT_NAME" style="font-weight:bold">Product I:</label>
+                            <input class="form-control" name="FSPM_PRODUCT_NAME" id="FSPM_PRODUCT_NAME" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success text-center mb-1" for="FSPM_PRODUCT_NAME2" style="font-weight:bold">Product II:</label>
+                            <input class="form-control" name="FSPM_PRODUCT_NAME2" id="FSPM_PRODUCT_NAME2" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success text-center mb-1" for="FGPP_GROSS_CONTRIB" style="font-weight:bold">Gross Contribution:</label>
+                            <input class="form-control" name="FGPP_GROSS_CONTRIB" id="FGPP_GROSS_CONTRIB" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success text-center mb-1" for="FGPP_NET_CONTRIB" style="font-weight:bold">Net Contribution:</label>
+                            <input class="form-control" name="FGPP_NET_CONTRIB" id="FGPP_NET_CONTRIB" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success text-center mb-1" for="FGPP_SUMASSURED" style="font-weight:bold">Sum Assured:</label>
+                            <input class="form-control" name="FGPP_SUMASSURED" id="FGPP_SUMASSURED" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card col-md-12 col-sm-12 p-2">
+                <div class="card-body">
+                    <div class="row">
+                        <h4 class="text-primary" style="font-weight:bold">Empolyee Details:</h4>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success mb-1" for="NUMBER_OF_EMPLOYEES" style="font-weight:bold">No of Employees:</label>
+                            <input class="form-control" name="NUMBER_OF_EMPLOYEES" id="NUMBER_OF_EMPLOYEES" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success mb-1" for="AVG_AGE_OF_EMPLOYEES" style="font-weight:bold">Average Age:</label>
+                            <input class="form-control" name="AVG_AGE_OF_EMPLOYEES" id="AVG_AGE_OF_EMPLOYEES" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success text-center mb-1" for="MAX_AGE_OF_EMPLOYEES" style="font-weight:bold">Maximum Age:</label>
+                            <input class="form-control" name="MAX_AGE_OF_EMPLOYEES" id="MAX_AGE_OF_EMPLOYEES" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success text-center mb-1" for="MIN_AGE_OF_EMPLOYEES" style="font-weight:bold">Minimum Age:</label>
+                            <input class="form-control" name="MIN_AGE_OF_EMPLOYEES" id="MIN_AGE_OF_EMPLOYEES" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success text-center mb-1" for="NO_OF_EMPLOYEES_ABOVE_SIXTY" style="font-weight:bold">No. of Lives above 60:</label>
+                            <input class="form-control" name="NO_OF_EMPLOYEES_ABOVE_SIXTY" id="NO_OF_EMPLOYEES_ABOVE_SIXTY" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success text-center mb-1" for="NO_OF_EMPLOYEES_BELOW_18" style="font-weight:bold">No. of Lives below 18:</label>
+                            <input class="form-control" name="NO_OF_EMPLOYEES_BELOW_18" id="NO_OF_EMPLOYEES_BELOW_18" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success mb-1" for="AVG_TAKAFUL_SUM" style="font-weight:bold">Average Takaful Sum:</label>
+                            <input class="form-control" name="AVG_TAKAFUL_SUM" id="AVG_TAKAFUL_SUM" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success mb-1" for="MIN_TAKAFUL_SUM" style="font-weight:bold">Minimum Takaful Sum:</label>
+                            <input class="form-control" name="MIN_TAKAFUL_SUM" id="MIN_TAKAFUL_SUM" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success text-center mb-1" for="MAX_TAKAFUL_SUM" style="font-weight:bold">Maximum Takaful Sum:</label>
+                            <input class="form-control" name="MAX_TAKAFUL_SUM" id="MAX_TAKAFUL_SUM" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success text-center mb-1" for="" style="font-weight:bold">Unit Rate Upto Age:</label>
+                            <input class="form-control" name="" id="" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success text-center mb-1" for="FGPP_FCL_SUMCOVRD" style="font-weight:bold">Free Cover Limit:</label>
+                            <input class="form-control" name="FGPP_FCL_SUMCOVRD" id="FGPP_FCL_SUMCOVRD" readonly>
+                        </div>
+                        <div class="mb-2 col-md-3">
+                            <label class="text-success text-center mb-1" for="" style="font-weight:bold">FCL Applicable Upto Age:</label>
+                            <input class="form-control" name="" id="" value="60" readonly />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card col-lg-12 p-3">
+            <div class="card-body">
+                <div class="row mt-3 mb-3">
+                    <h4 class="text-primary pb-2" style="font-weight:bold">Benefit Details:</h4>
+                    <div class="col-12" style="overflow-x:auto">
+                        <table id="RidersDTLGrid" class="table table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Rider Name</th>
+                                    <th>Event Covered</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Frequency</th>
+                                    <th>Payable</th>
+                                    <th>Loading Type</th>
+                                    <th>Loading Value</th>
+                                    <th>Rider Contribution</th>
+                                    <th>Net Contribution</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row mt-6">
+                    <h4 class="text-primary pb-2" style="font-weight:bold">Members Details:</h4>
+                    <div class="col-12" style="overflow-x:auto">
+                        <table id="CoveredPersonstablesGrid" class="table table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Customer CNIC</th>
+                                    <th>Name</th>
+                                    <th>Age</th>
+                                    <th>Designation</th>
+                                    <th>Policy Mode</th>
+                                    <th>Coverage Start Date</th>
+                                    <th>Coverage End Date</th>
+                                    <th>Gross Contribution</th>
+                                    <th>Net Contribution</th>
+                                    <th>Sum Assured</th>
+                                    <th>FCL Sum Assured</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row mt-6">
+                    <h4 class="text-primary pb-2" style="font-weight:bold">Pending Members Details:</h4>
+                    <div class="col-12" style="overflow-x:auto">
+                        <table id="PendingPersonsDTLGrid" class="table table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Customer CNIC</th>
+                                    <th>Name</th>
+                                    <th>Age</th>
+                                    <th>Designation</th>
+                                    <th>Policy Mode</th>
+                                    <th>Coverage Start Date</th>
+                                    <th>Coverage End Date</th>
+                                    <th>Sum Assured</th>
+                                    <th>Sum Assured Criteria</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="noQuoInfo" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body p-3">
+                    <div class="row">
+                        <i class="fa fa-exclamation-triangle p-1 text-warning text-center" aria-hidden="true"></i>
+                        <div class="text-center mt-1">
+                            No data found! <br /> This quotation has not been registered yet
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="btnCloseNoQuo">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="noBenefitInfo" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body p-3">
+                    <div class="row">
+                        <i class="fa fa-exclamation-triangle p-1 text-warning text-center" aria-hidden="true"></i>
+                        <div class="text-center mt-1">
+                            No Benefits data found! <br />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="btnCloseNoBenefit">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="spinner-box" hidden>
+        <img src="/Assets/img/photos/loader_img.gif" id="loaderImage" />
+        <div id="loader_text" class="text-white pt-2 text-center">Please wait...While Quotation Data is being Loaded!</div>
+    </div>
+</form>

@@ -1,0 +1,571 @@
+﻿@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Configuration.Json
+@inject IConfiguration Configuration
+@{
+    ViewData["Title"] = "Quotation Process";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@*<script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/json2/20130526/json2.min.js"></script>*@
+
+<script>
+
+    const app_host_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_IP").Value);
+    const api_port_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_PNO").Value);
+    const Result_API = (app_host_API + ":" + api_port_API);
+
+    const app_host_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_IP").Value);
+    const api_port_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_PNO").Value);
+    const Result_Front = (app_host_Front + ":" + api_port_Front);
+
+</script>
+
+<script type="text/javascript">
+
+    window.setTimeout(function () {
+        $(".alert").fadeTo(500, 0).slideUp(500, function () {
+            $(this).remove();
+        });
+    }, 4000);
+
+
+    $(document).ready(function () {
+        $('form input').keydown(function (event) {
+            if (event.keyCode == 13) {
+                event.preventDefault();
+                return false;
+            }
+        });
+    });
+
+    jQuery(document).ready(function () {
+        $("#CheckUserFCLAMT").click(function () {
+            if ($(this).is(":checked")) {
+                $('#FPQF_USER_FCL_AMT').attr("Enabled", $(this).is(":checked"));
+            } else {
+                $('#FPQF_USER_FCL_AMT').attr("disabled", $(this).is(":checked"));
+            }
+        });
+    });
+
+    //$(document).ready(function () {
+    //    $("#FGQH_QUOTATION_CONFIRM").change(function () {
+    //        var x = $(this).val();
+    //        if (x === 'C') {
+    //            $("#FGQH_QUOTATION_CONFIRM").attr("disabled", "disabled");
+    //        }
+    //        if (x === 'N') {
+    //            $("#FGQH_QUOTATION_CONFIRM").attr("disabled", false);
+    //        }
+    //        if (x === 'H') {
+    //            $("#FGQH_QUOTATION_CONFIRM").attr("disabled", false);
+    //        }
+    //    });
+    //});
+
+
+    $(document).ready(function () {
+        $('#btnQuoataProcessSearch').click(function (e) {
+            e.preventDefault();
+            var QuoationCode = $("#FSPM_PRODUCT_CODESER").val();
+            var baseURL = "http://" + Result_API + "/api/Quotation/GetQuotatPlanDtls/" + QuoationCode;
+            var opsht = '';
+            var FSPM_PRODUCT_ID;
+            $(".spinner-box").removeAttr("hidden", true);
+            setTimeout(function () {
+                $.ajax(baseURL,
+                    {
+                        "async": true,
+                        "crossDomain": true,
+                        type: "GET",
+                        cache: false,
+                        contentType: "application/json; charset=utf-8",
+                        datatype: JSON,
+                        //timeout: 5000,
+                        success: function (data, status, xhr) {
+                            if (data.length != 0) {
+                                $(data).each(function () {
+
+                                    $("#FGQH_QUOTATHDR_CODE").val(this.FGQH_QUOTATHDR_CODE);
+                                    $("#FGQH_QUOTATHDR_ID").val(this.FGQH_QUOTATHDR_ID);
+                                    // $("#FPQP_QUOTATPLAN_ID").val(this.FPQP_QUOTATPLAN_ID);
+
+                                    $("#FPQP_NETPREMIUM").val(this.FPQP_NETPREMIUM);
+                                    //$("#FSPM_PRODUCT_ID").val(this.FSPM_PRODUCT_ID);
+                                    var FSLO_LOCATION_ID = this.FSLO_LOCATION_ID;
+                                    var FSLO_LOCATION_ID2 = this.FSLO_LOCATION_ID2;
+                                    FSPM_PRODUCT_ID = this.FSPM_PRODUCT_ID;
+                                    $("#FGQH_QUOTATION_CONFIRM").val(this.FGQH_QUOTATION_CONFIRM);
+                                    $("#FPQP_GROSSPREMIUM").val(this.FPQP_GROSSPREMIUM);
+                                    $("#FPQP_SUMASSURED").val(this.FPQP_SUMASSURED);
+                                    $("#FPQP_SERVICETAX").val(this.FPQP_SERVICETAX);
+                                    $("#FPQP_OTHER_AMT").val(this.FPQP_OTHER_AMT);
+                                    $("#FPQP_DISCOUNT_AMT").val(this.FPQP_DISCOUNT_AMT);
+                                    $("#FPQP_WAKALA_PERC").val(this.FGQH_WAKALA_PERC);
+                                    //if (this.FGQH_QUOTATION_CONFIRM == 'Y') {
+                                    //    $("#FGQH_QUOTATION_CONFIRM").val('Yes');
+                                    //} else if (this.FGQH_QUOTATION_CONFIRM == 'N') {
+                                    //    $("#FGQH_QUOTATION_CONFIRM").val('No');
+                                    //}
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        type: "GET",
+                                        url: "http://" + Result_API + "/api/Product/GetProductDetailsById/" + FSPM_PRODUCT_ID,
+                                        cache: false,
+                                        //timeout: 5000,
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        success: function (data) {
+                                            $(data).each(function () {
+                                                $("#FSPM_PRODUCT_ID").val(this.FSPM_PRODUCT_DESP);
+                                                //$("#FSPM_PRODUCT_ID_").val(this.FSPM_PRODUCT_DESP);
+                                                //$("#FSPM_PRODUCT_ID_P").val(this.FSPM_PRODUCT_DESP);
+
+                                            });
+                                        }
+                                    });
+
+                                    $(document).ready(function () {
+                                        $.ajax({
+                                            "async": true,
+                                            "crossDomain": true,
+                                            url: "http://" + Result_API + "/api/Institution/GetInstitutionDetails/" + FSLO_LOCATION_ID,
+                                            type: "GET",
+                                            contentType: "application/json; charset=utf-8",
+                                            datatype: JSON,
+                                            timeout: 5000,
+                                            cache: false,
+                                            success: function (result) {
+                                                $(result).each(function () {
+                                                    $("#FSLO_LOCATION_ID").val(this.FSSI_DESCRIPTION);
+                                                });
+                                            },
+                                            error: function (data) { }
+                                        });
+                                    });
+
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        url: "http://" + Result_API + "/api/GlobalParameters/GetLocationList/" + FSLO_LOCATION_ID2,
+                                        type: "GET",
+                                        timeout: 5000,
+                                        cache: false,
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        success: function (result) {
+                                            $(result).each(function () {
+                                                $("#FSLO_LOCATION_ID2").val(this.FSLO_DESCRIPTION);
+
+                                            });
+                                        },
+                                        error: function (data) { }
+                                    });
+
+                                    var itr = 0;
+                                    var itr1 = 0;
+                                    var Status = '';
+
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        url: "http://" + Result_API + "/api/QuotaProcess/GetQuotatFCLDtls/" + $("#FGQH_QUOTATHDR_CODE").val(),
+                                        type: "GET",
+                                        cache: false,
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        timeout: 5000,
+                                        beforeSend: function (xhr) {
+
+                                            $.ajax({
+                                                url: "http://" + Result_API + "/api/GlobalParameters/GetGlobalParamByCategory/QTGRC",
+                                                type: "GET",
+                                                contentType: "application/json; charset=utf-8",
+                                                datatype: JSON,
+                                                //timeout: 5000,
+                                                cache: false,
+                                                success: function (result2) {
+                                                    for (var i = 0; i < result2.length; i++) {
+                                                        opsht += '<option value="' + result2[i].PARAM_VALUE + '">' + result2[i].PARAM_NAME + '</option>';
+                                                    }
+                                                },
+                                                error: function (data2) { }
+                                            });
+                                        },
+                                        success: function (data) {
+                                            $('#TableId tbody').empty();
+                                            if ($("#TableId tbody").length == 0) {
+                                                $("#TableId").append("<tbody> <tr> <h1>hello</h1></tr></tbody>");
+                                            }
+
+                                            for (var i = 0; i < data.length; i++) {
+                                                if (i <= 0) {
+                                                    $("#TableId tbody").append("<tr><td class= 'text-success' style = 'font-weight:bold; width:220px' >Product Plan</td >" +
+                                                        "<td class='text-success' style='font-weight:bold; width:220;'>Parant Plan</td>" +
+                                                        "<td class='text-success' style='font-weight:bold; width:60px;'>Min Age</td>" +
+                                                        "<td class='text-success' style='font-weight:bold; width:60px;'>Max Age</td>" +
+                                                        "<td class='text-success' style='font-weight:bold; width:100px;'>System FCL / Amount</td>" +
+                                                        "<td class='text-success' style='font-weight:bold; width:100px;'>User FCL / Amount</td>" +
+                                                        "<td class='text-success' style='font-weight:bold; width:30px; '>System / User FCL</td>");
+                                                }
+
+                                                $("#TableId tbody").append("<tr>" +
+                                                    "<td ><input class='form-control' style='width:220px;' readonly='readonly' name='FSPM_PRODUCT_ID_' id='FSPM_PRODUCT_ID_" + itr + "' value = '" + $("#FSPM_PRODUCT_ID").val() + "' ></td>" +
+                                                    "<td ><input class='form-control' style='width:220px;' readonly='readonly' name='FSPM_PRODUCT_ID_P' id='FSPM_PRODUCT_ID_P" + itr + "' value = '" + $("#FSPM_PRODUCT_ID").val() + "' ></td>" +
+                                                    "<td ><input class='form-control' style='width:60px;' readonly='readonly' name='FSPF_GRPENTAGE_MIN' id='FSPF_GRPENTAGE_MIN" + itr + "' value = '" + data[i].FSPF_GRPENTAGE_MIN + "' ></td>" +
+                                                    "<td ><input class='form-control' style='width:60px;' readonly='readonly' name='FSPF_GRPENTAGE_MAX' id='FSPF_GRPENTAGE_MAX" + itr + "' value = '" + data[i].FSPF_GRPENTAGE_MAX + "' ></td>" +
+                                                    "<td ><input class='form-control' style='width:100px;' readonly='readonly' name='FPQF_SYS_FCL_AMT' id='FPQF_SYS_FCL_AMT" + itr + "' value = '" + data[i].FPQF_SYS_FCL_AMT + "' ></td>" +
+                                                    "<td ><input class='form-control' style='width:100px;' name='FPQF_USER_FCL_AMT' id='FPQF_USER_FCL_AMT" + itr + "' value = '" + data[i].FPQF_USER_FCL_AMT + "'></td>" +
+                                                    "<td ><input class='form-check-input' style='width:30px ; 'type= 'checkbox'  name='CheckUserFCLAMT' id='CheckUserFCLAMT" + itr + "' value='false' ></td>" +
+                                                    "<td ><input class='form-control' style = 'width:10px;' name='FSPF_PRODFCL_ID' id='FSPF_PRODFCL_ID" + itr + "'  hidden='hidden' value = '" + data[i].FSPF_PRODFCL_ID + "' >" +
+                                                    "<input class='form-control' style = 'width:10px;' name='FPQF_QUOTFCL_ID' id='FPQF_QUOTFCL_ID" + itr + "'  hidden='hidden' value = '" + data[i].FPQF_QUOTFCL_ID + "' ></td>" +
+                                                    "</tr>");
+                                                //if(data[i].FPQF_SYS_FCL_AMT == null)
+                                                //{
+                                                //    data[i].FPQF_USER_FCL_AMT = 0;
+                                                //}
+
+                                                if (data[i].FPQF_USER_FCL_AMT > 0) {
+                                                    var elm = document.getElementById('CheckUserFCLAMT' + itr);
+                                                    elm.click();
+                                                }
+
+                                                itr += 1;
+
+                                                var totalRowCount = 0;
+                                                var rowCount = 0;
+                                                var table = document.getElementById("TableId");
+                                                var rows = table.getElementsByTagName("tr")
+                                                for (var y = 0; y < rows.length; y++) {
+                                                    totalRowCount++;
+                                                    if (rows[y].getElementsByTagName("td").length > 0) {
+                                                        rowCount++;
+                                                    }
+                                                }
+                                                if (totalRowCount > 0) {
+
+                                                    itr = totalRowCount - 1;
+                                                }
+                                                $("#FCLRow").val(itr);
+                                            }
+                                        },
+                                        error: function (data) { }
+                                    });
+
+
+                                    $.ajax({
+                                        "async": true,
+                                        "crossDomain": true,
+                                        url: "http://" + Result_API + "/api/QuotaProcess/GetQuotatUnitRateLimitDtls/" + $("#FGQH_QUOTATHDR_CODE").val(),
+                                        type: "GET",
+                                        cache: false,
+                                        contentType: "application/json; charset=utf-8",
+                                        datatype: JSON,
+                                        timeout: 5000,
+                                        success: function (data_) {
+                                            $(data_).each(function () {
+
+                                                $("#FPQR_QUOTATRISK_ID").val($("#FSPM_PRODUCT_ID").val());
+                                                $("#FPQR_EVENT_ID").val($("#FSPM_PRODUCT_ID").val());
+                                                $("#FPQR_SYSTMUNIT_RATE").val(this.FPQR_SYSTMUNIT_RATE);
+                                                $("#FPQR_USERUNIT_RATE").val(this.FPQR_USERUNIT_RATE);
+                                                $("#FPQR_SYSUSR_RATE_FLAG").val(this.FPQR_SYSUSR_RATE_FLAG);
+                                                $("#fpqr_rirate").val(this.FPQR_RIRATE);
+                                            });
+                                        },
+                                        error: function (data) { }
+                                    });
+
+
+                                    //if ($("#FGQH_QUOTATHDR_ID").val() == '') {
+
+                                    //    if (confirm("Quotation with this Quotation Code doesn't exist, Do you want to Add new Quotation Process?")) {
+                                    //        var go_to_url = "http://" + Result_Front + "/QuotationProcess";
+                                    //        document.location.href = go_to_url;
+                                    //    }
+                                    //}
+                                });
+                            } else if (data.FGQH_QUOTATHDR_ID.val() == '') {
+                                alert('No Data Found for given criteria.');
+                            }
+                        },
+                        error: function (jqXhr, textStatus, errorMessage) { // error callback
+                            alert('error, Counld not found Result as provided parameter.' + errorMessage);
+                        }
+                    }
+                );
+                $(".spinner-box").attr("hidden", true)
+            }, 2000)
+        });
+    });
+
+    window.setTimeout(function () {
+        $(".alert").fadeTo(500, 0).slideUp(500, function () {
+            $(this).remove();
+        });
+    }, 4000);
+
+
+
+    $(document).ready(function () {
+        $('form input').keydown(function (event) {
+            if (event.keyCode == 13) {
+                event.preventDefault();
+                return false;
+            }
+        });
+
+        $('#SaveUpdateQuotaProcess').click(function (e) {
+            var txtFormIssues = '';
+            var IsFormValid = false;
+
+
+            if ($('#FGQH_QUOTATION_CONFIRM').val() == '') {
+                alert('Please provide Quotation Confirmed Type.\n');
+                IsFormValid = false;
+            } else if ($('#FPQP_SERVICETAX').val() == '') {
+                alert('Please provide Service tax.\n');
+                IsFormValid = false;
+            } else if ($('#FPQP_DISCOUNT_AMT').val() == '') {
+                alert('Discount amount not entered\n');
+                IsFormValid = false;
+            } else if ($('#FPQP_OTHER_AMT').val() == '') {
+                alert('Please provide Other Amount.\n');
+                IsFormValid = false;
+            } else if ($('#FGQH_WITHRCPT_YN').val() == '') {
+                alert('Please Select Quoatation With Out Receipt.\n');
+                IsFormValid = false;
+            } else if ($('#FPQR_SYSTMUNIT_RATE').val() == '') {
+                alert('Please Select System Rate.\n');
+                IsFormValid = false;
+            } else if ($('#fpqr_rirate').val() == '') {
+                alert('Please Enter Unite RI Rate.\n');
+                IsFormValid = false;
+            } else if ($('#FPQR_USERUNIT_RATE').val() == '') {
+                alert('Please Enter User Unite Rate.\n');
+                IsFormValid = false;
+            } else if ($('#FPQR_USERNET_RATE').val() == '') {
+                alert('Please Enter Net Unite Rate.\n');
+                IsFormValid = false;
+            } else {
+                IsFormValid = true;
+                $("#saving_spinner").removeAttr("hidden", true);
+            }
+            return IsFormValid;
+        });
+    });
+
+</script>
+
+<form method="post" action="/New_Business/SaveOrUpdateQuotaProcess" class="form-horizontal">
+    @Html.AntiForgeryToken()
+    <div class="card">
+        <div class="card-body">
+            <div class="row mt-3 mb-0 pb-0">
+                <h1 class="card-title" style="font-weight: 600; font-size: 1.3rem; font-weight: bold">Group Quotation Processing</h1>
+            </div>
+            <div class="row pt-0">
+                <div class="col-md-3">
+                    <label class="text-white" for="QuotationSearch" style="font-weight:bold">Quotation Details Search:</label>
+                </div>
+                <div class="input-group">
+                    <button class="btn btn-secondary" type="button" name="btnQuoataProcessSearch" id="btnQuoataProcessSearch" onclick="btnQuoataProcessSearch" value="Search ">Go!</button>
+                    <input type="text" name="FSPM_PRODUCT_CODESER" id="FSPM_PRODUCT_CODESER" style="width:50%" placeholder="QT100000001" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    @if (TempData["successQuotaProcess"] != null)
+                    {<div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <strong>
+                                Success
+                            </strong> @TempData["successQuotaProcess"]
+                        </div>}
+                </div>
+                <div>
+                    <input class="form-control" name="FGQH_QUOTATHDR_ID" id="FGQH_QUOTATHDR_ID" hidden="hidden" type="number">
+                    <input class="form-control" name="FCLRow" id="FCLRow" hidden="hidden">
+                    <input class="form-control" name="UniteRateRow" id="UniteRateRow" hidden="hidden">
+                    <input class="form-control" name="FPQP_QUOTATPLAN_ID" id="FPQP_QUOTATPLAN_ID" hidden="hidden" value="0">
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <h1 class="h4">Quotation Details</h1>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FGQH_QUOTATHDR_CODE" style="font-weight:bold">Quotation Code:</label>
+                        <input class="form-control" readonly="readonly" placeholder="Quotation Code" name="FGQH_QUOTATHDR_CODE" id="FGQH_QUOTATHDR_CODE" type="text">
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FSLO_LOCATION_ID" style="font-weight:bold">Company Name:</label>
+                        <input class="form-control" readonly="readonly" placeholder="Company Name" name="FSLO_LOCATION_ID" id="FSLO_LOCATION_ID" type="text">
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FSLO_LOCATION_ID2" style="font-weight:bold">Company Branch:</label>
+                        <input class="form-control" readonly="readonly" placeholder="Company Branch" name="FSLO_LOCATION_ID2" id="FSLO_LOCATION_ID2" type="text">
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="" style="font-weight:bold">Company Head Office:</label>
+                        <input class="form-control" readonly="readonly" placeholder="Company Head Office" name="" id="" type="text">
+                    </div>
+                </div>
+                <div class="row">
+
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FSPM_PRODUCT_ID" style="font-weight:bold">Plan:</label>
+                        <input class="form-control" readonly="readonly" placeholder="Plan Name" name="FSPM_PRODUCT_ID" id="FSPM_PRODUCT_ID" type="text">
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FGQH_QUOTATION_CONFIRM" style="font-weight:bold">Quotation Confirmed:<span class="text-danger">  *</span></label>
+                        <select class="form-select" name="FGQH_QUOTATION_CONFIRM" id="FGQH_QUOTATION_CONFIRM">
+                            <option value="Y">Yes</option>
+                            <option value="N">No</option>
+                            <option value="C">Confirmed</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FPQP_WAKALA_PERC" style="font-weight:bold">Wakala%:</label>
+                        <input class="form-control" readonly="readonly" placeholder="Wakala%" name="FPQP_WAKALA_PERC" id="FPQP_WAKALA_PERC" type="text">
+                    </div>
+
+                    @*<div class="mb-2 col-md-3">
+                        <label class="text-success" for="Policy_No" style="font-weight:bold">Policy Number:<span>  *</span></label>
+                        <input class="form-control" readonly="readonly" placeholder="Policy Number" name="Policy_No" id="Policy_No" value="@TempData["NEWPOLNO"]" type="text">
+                    </div>*@
+                </div>
+            </div>
+        </div>
+
+
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <h1 class="h4">Contribution Details</h1>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FPQP_GROSSPREMIUM" style="font-weight:bold">Gross Contribution:</label>
+                        <input class="form-control" readonly="readonly" placeholder="Contribution" name="FPQP_GROSSPREMIUM" id="FPQP_GROSSPREMIUM" value="@TempData["GROSS_PREMIUM"]" type="text">
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FPQP_NETPREMIUM" style="font-weight:bold">Net Contribution:</label>
+                        <input class="form-control" readonly="readonly" placeholder="Net Contribution" name="FPQP_NETPREMIUM" id="FPQP_NETPREMIUM" value="@TempData["NET_PREMIUM"]" type="text">
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FPQP_SUMASSURED" style="font-weight:bold">Sum Covered:</label>
+                        <input class="form-control" readonly="readonly" placeholder="Sum Covered" name="FPQP_SUMASSURED" id="FPQP_SUMASSURED" value="@TempData["SUMASSURED"]" type="text">
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FPQP_SERVICETAX" style="font-weight:bold">Services Tax:<span class="text-danger">  *</span></label>
+                        <input class="form-control" placeholder="Services Tax" name="FPQP_SERVICETAX" id="FPQP_SERVICETAX" type="text">
+                    </div>
+                </div>
+                <div class="row">
+
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FPQP_DISCOUNT_AMT" style="font-weight:bold">Discount:<span class="text-danger">  *</span></label>
+                        <input class="form-control" placeholder="Discount" name="FPQP_DISCOUNT_AMT" id="FPQP_DISCOUNT_AMT" type="text">
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FPQP_OTHER_AMT" style="font-weight:bold">Others:<span class="text-danger">  *</span></label>
+                        <input class="form-control" placeholder="Others" name="FPQP_OTHER_AMT" id="FPQP_OTHER_AMT" type="text">
+                    </div>
+
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FGQH_WITHRCPT_YN" style="font-weight:bold">Quotation With Receipt:<span class="text-danger">  *</span></label>
+                        <select class="form-select" name="FGQH_WITHRCPT_YN" id="FGQH_WITHRCPT_YN">
+                            <option value="Y">Yes</option>
+                            <option value="N">No</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h1 class="h4">Free Cover Limit</h1>
+                <div class="row pt-1">
+                    <table @*class="table table-responsive table-striped table-bordered table-hover"*@ class="table table-bordered"
+                           id="TableId" style="width:100%;overflow:auto; max-height:100px;"
+                           align="center">
+                        <tr>
+                            <td class="text-success" style="font-weight:bold">Product Plan</td>
+                            <td class="text-success" style="font-weight:bold">Parent Plan</td>
+                            <td class="text-success" style="font-weight:bold">Min Age</td>
+                            <td class="text-success" style="font-weight:bold">Max Age</td>
+                            <td class="text-success" style="font-weight:bold">System FCL / Amount</td>
+                            <td class="text-success" style="font-weight:bold">User FCL / Amount</td>
+                            <td class="text-success" style="font-weight:bold">System / User FCL</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-3">
+                    <h1 class="h4">Unit Rate</h1>
+                </div>
+                <div class="row">
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FPQR_QUOTATRISK_ID" style="font-weight:bold">Plan Name:<span class="text-danger">  </span></label>
+                        <input class="form-control" placeholder="Plan Name" name="FPQR_QUOTATRISK_ID" id="FPQR_QUOTATRISK_ID" readonly>
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FPQR_EVENT_ID" style="font-weight:bold">Event:<span class="text-danger">  </span></label>
+                        <input class="form-control" placeholder="Event Name" name="FPQR_EVENT_ID" id="FPQR_EVENT_ID" readonly>
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FPQR_SYSUSR_RATE_FLAG" style="font-weight:bold">Rate Flag:<span class="text-danger">*</span></label>
+                        <select class="form-select" name="FPQR_SYSUSR_RATE_FLAG" id="FPQR_SYSUSR_RATE_FLAG">
+                            <option value="S">System Rate</option>
+                            <option value="U">User Rate</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FPQR_SYSTMUNIT_RATE" style="font-weight:bold">System Unit Rate:<span class="text-danger">  </span></label>
+                        <input class="form-control" placeholder="System Unit Rate" name="FPQR_SYSTMUNIT_RATE" id="FPQR_SYSTMUNIT_RATE">
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FPQR_USERUNIT_RATE" style="font-weight:bold">User Unit Rate:<span class="text-danger">  </span></label>
+                        <input class="form-control" placeholder="User Unit Rate" name="FPQR_USERUNIT_RATE" id="FPQR_USERUNIT_RATE">
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="FPQR_USERNET_RATE" style="font-weight:bold">Net Unit Rate:<span class="text-danger">  </span></label>
+                        <input class="form-control" placeholder="Net Unit Rate" name="FPQR_USERNET_RATE" id="FPQR_USERNET_RATE">
+                    </div>
+                    <div class="mb-2 col-md-3">
+                        <label class="text-success" for="fpqr_rirate" style="font-weight:bold">RI Rates:<span class="text-danger">  </span></label>
+                        <input class="form-control" placeholder="RI Rates" name="fpqr_rirate" id="fpqr_rirate">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <button class="btn btn-success" type="submit" style="margin-left:03%; width:017%; text-align: center;" id="SaveUpdateQuotaProcess" name="SaveUpdateQuotaProcess">Process</button>
+        </div>
+    </div>
+    <div class="spinner-box" hidden>
+        <img src="/Assets/img/photos/loader_img.gif" id="loaderImage" />
+        <div id="loader_text" class="text-white pt-2 text-center">Please wait...While Quotation Data is being Loaded!</div>
+    </div>
+
+    <div id="saving_spinner" hidden>
+        <img src="/Assets/img/photos/loader_img.gif" id="loaderImage" />
+        <div id="loader_text" class="text-white pt-2 text-center">Please wait...While Quotation is being Processed!</div>
+    </div>
+</form>

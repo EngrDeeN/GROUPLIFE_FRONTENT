@@ -1,0 +1,47 @@
+﻿@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Configuration.Json
+@inject IConfiguration Configuration
+@{
+    ViewData["Title"] = "Product Rates";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<script>
+   const app_host_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_IP").Value);
+    const api_port_API = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_API_PNO").Value);
+    const Result_API = (app_host_API + ":" + api_port_API);
+
+    const app_host_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_IP").Value);
+    const api_port_Front = @Json.Serialize(@Configuration.GetSection("Endpoint").GetSection("CORE_FRONT_PNO").Value);
+    const Result_Front = (app_host_Front + ":" + api_port_Front);
+
+    //Result_API = "localhost:62252";
+    //Result_Front = "localhost:16948";
+</script>
+
+<script>
+    $(document).ready(function () {
+        $("#imageUploadForm").change(function () {
+            var formData = new FormData();
+            var totalFiles = document.getElementById("imageUploadForm").files.length;
+            for (var i = 0; i < totalFiles; i++) {
+                var file = document.getElementById("imageUploadForm").files[i];
+                formData.append("imageUploadForm", file);
+            }
+            $.ajax({
+                type: "POST",
+                url: '/Home/Upload',
+                data: formData,
+                dataType: 'json',
+                contentType: false,
+                processData: false
+            }).done(function () {
+                alert('success');
+            }.fail(function (xhr, status, errorThrown) {
+                alert('fail');
+            };
+        });
+    });
+</script>
+<input type="file" id="imageUploadForm" name="image" multiple="multiple" />
